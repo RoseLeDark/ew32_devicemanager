@@ -1,0 +1,22 @@
+{
+  "name": "ew32_devicem",
+  "version": "0.0.2",
+  "description": "a simple embedded device manager for 32 bit (esp32, rpi-core ...)",
+  "keywords": "device, device manager, vfs,",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/RoseLeDark/ew32_devicemanager.git"
+  },
+  "authors":
+  [
+    {
+      "name": "Anber-Sophia Schroeck",
+      "email": "anbersophia.schroeck@gmail.com"
+    }
+  ],
+  "license": "EUPL-12",
+  "homepage": "https://github.com/RoseLeDark/ew32_devicemanager/",
+  "frameworks": "arduino",
+  "platforms": "*"
+}
