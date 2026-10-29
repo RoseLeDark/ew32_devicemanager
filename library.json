@@ -18,5 +18,8 @@
   "license": "EUPL-12",
   "homepage": "https://github.com/RoseLeDark/ew32_devicemanager/",
   "frameworks": "arduino",
-  "platforms": "*"
+  "platforms": "*",
+  "dependencies": {
+    "pba3h11aso/ew32_base": "~0.0.2"
+  }
 }
