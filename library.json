@@ -1,6 +1,6 @@
 {
   "name": "ew32_devicem",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "a simple embedded device manager for 32 bit (esp32, rpi-core ...)",
   "keywords": "device, device manager, vfs,",
   "repository":
@@ -15,7 +15,7 @@
       "email": "anbersophia.schroeck@gmail.com"
     }
   ],
-  "license": "EUPL-12",
+  "license": "EUPL-1.2",
   "homepage": "https://github.com/RoseLeDark/ew32_devicemanager/",
   "frameworks": "arduino",
   "platforms": "*",
