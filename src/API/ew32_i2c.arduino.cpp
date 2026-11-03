@@ -1,3 +1,22 @@
+/*
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * Copyright (c) 2026 Amber-Sophia "RoseLeBlood" Schröck (gender:divers dey/deren )
+ *
+ * This file is part of ew32_devm.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the European Union Public Licence (EUPL),
+ * version 1.2 or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You should have received a copy of the European Union Public Licence
+ * along with this program. If not, see:
+ * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ */
 
 #include "ew32_devm/ew32_config.h"
 
@@ -38,7 +57,7 @@ uint8_t ew32_i2c_probe(ew32_dev_t* device, void*) {
 
         if (error == 0) {
             handle->address_set[address] = 1;
-            xewLoggingInfo1("I2C", "Found device 0x%02X", address);
+            //xewLoggingInfo1("I2C", "Found device 0x%02X", address);
         }
         
     }
@@ -57,20 +76,6 @@ uint8_t ew32_i2c_setup(ew32_dev_t* device, void*) {
         wire.begin(handle->pin_sda,handle->pin_scl);
     #endif
     
-#if EW32_DEVICE_USE_I2C_AUTOPROBE == 1
-    for (uint8_t addr = 0x00; addr <= 0x7F; addr++) {
-        
-        if (handle->address_set[addr] == 1) {
-            uint8_t _ret_hndl = 0;
-
-            if(handle->handler != NULL) {
-                _ret_hndl = handle->handler(device, EW32_BUSI2C_FOUND_NEWDEVICE, &addr, sizeof(uint8_t));
-            }
-            xewLoggingSerial(EW32_LOGGING_LEVEL_INFO, "I2C", "device at addrs: %02x @ %d", addr, _ret_hndl);
-        }
-
-    }
-#endif
 
     return EW32_DEVICE_NO_ERROR;
 }
@@ -144,11 +149,14 @@ int32_t ew32_i2c_write(ew32_dev_t* device, void* data, int32_t size) {
 }
 
 
+uint8_t ew32_i2c_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state) {
+    return EW32_DEVICE_ERROR_NOTIMPL;
+}
+uint8_t ew32_i2c_get_state(ew32_dev_t* device, uint8_t state_id) {
 
-uint8_t ew32_i2c_powerstate(ew32_dev_t* device, uint8_t state) {
     return EW32_DEVICE_ERROR_NOTIMPL;
 }
 
-
 }
+
 #endif

@@ -1,13 +1,31 @@
-/**
- * @file ew32_i2c.h
- * @brief I2C bus driver and communication interface for the ew32rs framework.
+/*
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * Copyright (c) 2026 Amber-Sophia "RoseLeBlood" Schröck (gender:divers dey/deren )
+ *
+ * This file is part of ew32_devm.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the European Union Public Licence (EUPL),
+ * version 1.2 or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You should have received a copy of the European Union Public Licence
+ * along with this program. If not, see:
+ * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  */
+
 
 #pragma once
 
 #include "ew32_device.h"
 
 #include <stdio.h>
+
+#if EW32_DEVICE_USE_I2C == 1
 
 /** @name I2C Bus Event Messages */
 /// @{
@@ -32,7 +50,7 @@ extern "C" {
  * @param size Size of the data payload in bytes.
  * @return uint8_t Status code (EW32_DEVICE_NO_ERROR on success).
  */
-typedef uint8_t (* i2c_handler)(ew32_dev_t* sender, uint8_t msg, void* addrs, uint32_t size);
+uint8_t EW32_WEAK ew32_i2c_handle(ew32_dev_t* sender, uint8_t msg, void* addrs, uint32_t size);
 
 /**
  * @brief Configuration structure for the I2C bus driver.
@@ -44,7 +62,6 @@ typedef struct es32_i2c_config {
     uint8_t address_set[128];   /**< Bitmap representing discovered 7-bit I2C addresses (0-127). */
     uint8_t hardware;           /**< Hardware flags or specific revision identifier. */
     void* apihandler;           /**< Underlying platform-specific driver handle (opaque pointer). */
-    i2c_handler handler;        /**< Registered event handler callback for bus notifications. */
 } ew32_i2c_cfg_t;
 
 /**
@@ -100,20 +117,18 @@ typedef struct ew32_i2c_registnewdev {
  * @param device Double pointer to receive the created base device instance.
  * @return uint8_t EW32_DEVICE_NO_ERROR on success, or an error code on failure.
  */
-#if EW32_DEVICE_USE_I2C == 1
-uint8_t ew32_device_i2c_setup(uint8_t sda, uint8_t scl, uint8_t port_num, i2c_handler handler, ew32_dev_t** device);
+
+uint8_t ew32_device_i2c_setup(uint8_t sda, uint8_t scl, uint8_t port_num, ew32_dev_t** device);
 uint8_t ew32_device_i2c_isadress(uint8_t port_num, uint8_t address);
 
 int32_t ew32_device_i2c_write(uint8_t port_num,  ew32_i2c_io_t* data, int32_t size);
 int32_t ew32_device_i2c_read(uint8_t port_num,  ew32_i2c_io_t* data, int32_t size);
-#else
-#define ew32_device_i2c_setup(sda, scl, port_num, handler, device)                    
-#define ew32_device_i2c_isadress(port_num, address)                                 
+       
 
-#define ew32_device_i2c_write(port_num,  data, size)                                
-#define ew32_device_i2c_read(port_num,   data, size)                                
-#endif 
 
 #ifdef __cplusplus
 }
 #endif
+
+
+#endif 

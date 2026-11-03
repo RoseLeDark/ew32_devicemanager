@@ -1,6 +1,6 @@
 {
   "name": "ew32_devicem",
-  "version": "0.0.4",
+  "version": "0.1.4",
   "description": "a simple embedded device manager for 32 bit (esp32, rpi-core ...)",
   "keywords": "device, device manager, vfs,",
   "repository":
@@ -19,9 +19,9 @@
   "homepage": "https://github.com/RoseLeDark/ew32_devicemanager/",
   "frameworks": "arduino",
   "platforms": "*",
-  "dependencies": {
-    "pba3h11aso/ew32_base": "~0.0.2"
-  }, 
+  "dependencies":  {
+    "pba3h11aso/ew32_base": "~0.3.0"
+  },
   "examples": [
       {
           "name": "Main",

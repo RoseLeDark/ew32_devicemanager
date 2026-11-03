@@ -1,3 +1,23 @@
+/*
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * Copyright (c) 2026 Amber-Sophia "RoseLeBlood" Schröck (gender:divers dey/deren )
+ *
+ * This file is part of ew32_devm.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the European Union Public Licence (EUPL),
+ * version 1.2 or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You should have received a copy of the European Union Public Licence
+ * along with this program. If not, see:
+ * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ */
+
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -56,7 +76,7 @@ int32_t ew32_vfsdb_regist_device(const char* path, ew32_dev_t* device, uint8_t s
         __vfs_file_db[i].state = 1;
         __vfs_file_db[i].device = device;
 
-        char* _p = (state == 1) ? EW32_VFS_DEV_PATH : EW32_VFS_SYS_PATH;     
+        const char* _p = (state == 1) ? EW32_VFS_DEV_PATH : EW32_VFS_SYS_PATH;     
 
         sniprintf(__vfs_file_db[i].path, sizeof(__vfs_file_db[i].path), "%s%c%s", _p, EW32_VFS_DELIMETER, path);
 
@@ -84,21 +104,26 @@ struct ew32_file_fd {
         };
         uint8_t        f;
     };
-    ew32_semaphore_t lock;         // Optional: Plattform-unabhängiges Mutex/Semaphor für den Zugriff
+    ew32_semaphore_t lock;
 };
 
-static struct ew32_file_fd         __fd_table[EW32_MAX_OPEN_FILES];
-static ew32_semaphore_t __ew32_lock_open;
-
+static struct ew32_file_fd          __fd_table[EW32_MAX_OPEN_FILES];
+static ew32_semaphore_t             __ew32_excl_lock;
+static ew32_semaphore_t             __ew32_create_lock; 
 uint8_t ew32_vfs_init()  {
     static uint8_t _created = 0;
     if(_created == 1) return 0;
     _created = 1;
-    ew32_semaphore_create(EW32_SEMAPHORE_MUTEX, &__ew32_lock_open);
+
+    __ew32_excl_lock = ew32_semaphore_create(EW32_SEMAPHORE_MUTEX);
+    __ew32_create_lock = ew32_semaphore_create(EW32_SEMAPHORE_MUTEX);
+
     return 0;
 }
 uint8_t __ew32_vfs_cheakother_exclusiv(ew32_file_t me) {
     uint8_t _ret = 0;
+
+    ew32_semaphore_lock(__ew32_excl_lock, EW32_INFINITY);
 
     for(ew32_file_t i = 0; i < EW32_MAX_OPEN_FILES; i++) {
         if(i == me) continue;
@@ -108,6 +133,9 @@ uint8_t __ew32_vfs_cheakother_exclusiv(ew32_file_t me) {
             break;
         }
     }
+
+    ew32_semaphore_unlock(__ew32_excl_lock);
+
     return _ret;
 }
 ew32_file_t _ew32_vfs_get_entry() {
@@ -123,6 +151,31 @@ ew32_file_t _ew32_vfs_get_entry() {
 
     return _ret;
 }
+
+ew32_dev_t* __ew32_vfs_cheak_device(ew32_file_t _fd, uint8_t* _ret) {
+
+    ew32_dev_t* _dev = 0;
+
+    if(_fd < 0 || _fd >= EW32_MAX_OPEN_FILES) return 0;
+
+    ew32_semaphore_lock(__ew32_create_lock, EW32_INFINITY);
+    while (1)
+    {
+        if(__fd_table[_fd].open_count == 0 || __fd_table[_fd].state != 1) 
+            { *_ret = -EPROTO; break; }
+
+        uint8_t _reet = ew32_vfsdb_getbyid(__fd_table[_fd].dev_index, &_dev);
+        if(_reet != 0 || _dev == 0) { *_ret = -ENODEV; break; }
+
+        
+        break;
+    };
+    ew32_semaphore_unlock(__ew32_create_lock);
+
+    *_ret = 0;
+    return _dev;
+}
+
 uint8_t ew32_vfs_fopen(ew32_file_t* ctx, const char * path, int flags, int mode) {
     if(ctx == 0) return EIO;
 
@@ -131,30 +184,30 @@ uint8_t ew32_vfs_fopen(ew32_file_t* ctx, const char * path, int flags, int mode)
     uint8_t canWrite = 0;
     uint8_t _ret = 1;
 
+    int access_mode = flags & O_ACCMODE;
     
-    ew32_semaphore_lock(__ew32_lock_open, EW32_INFINITY);
-
-    do
+    ew32_semaphore_lock(__ew32_create_lock, EW32_INFINITY);
+    
+    while (1)
     {   
         int32_t _db_entry = __ew32_vfsdb_getidByPath(path, &canRead, &canWrite);
         if (_db_entry == -1) { _ret = ENXIO; break; }  // not a device
 
 
-        if (flags &  O_RDONLY && canRead == 0) { _ret = EINVAL; break; } // O_RDONLY
-        if (flags &  O_WRONLY && canWrite == 0){ _ret = EINVAL; break; }  // O_WRONLY
-        if (flags &  O_RDWR && (!canRead || !canWrite)) { _ret = EINVAL; break; }  // O_RDWR
+        if (access_mode == O_RDONLY  && canRead == 0) { _ret = EINVAL; break; } // O_RDONLY
+        if (access_mode == O_WRONLY && canWrite == 0){ _ret = EINVAL; break; }  // O_WRONLY
+        if (access_mode == O_RDWR && (!canRead || !canWrite)) { _ret = EINVAL; break; }  // O_RDWR
         if (flags & O_CREAT) { _ret = EPERM; break; } 
 
         _newfd = _ew32_vfs_get_entry();
         if(_newfd == -1)  { _ret = ENFILE; break; } 
-
+        
         if(mode == EW32FILE_O_EXCLUSIVE && __ew32_vfs_cheakother_exclusiv(_newfd) == 1) {
             __fd_table[_newfd].state = 0;
             _ret = EBUSY; break; // Already exclusive
         } 
 
-        ew32_semaphore_create(EW32_SEMAPHORE_MUTEX, &__fd_table[_newfd].lock);
-
+        __fd_table[_newfd].lock = ew32_semaphore_create(EW32_SEMAPHORE_MUTEX);
         __fd_table[_newfd].state = 1;
         __fd_table[_newfd].open_count = 1;
         __fd_table[_newfd].dev_index = _db_entry;
@@ -166,38 +219,28 @@ uint8_t ew32_vfs_fopen(ew32_file_t* ctx, const char * path, int flags, int mode)
         _ret = 0;
 
         break;
-    } while (0);
-
-    ew32_semaphore_unlock(__ew32_lock_open);
+    };
+    ew32_semaphore_unlock(__ew32_create_lock);
 
     return _ret;
 }
+
+
+
+
+
 ssize_t ew32_vfs_fread (ew32_file_t* ctx, void * dst, size_t size) {
     if(ctx == 0) return -EIO;
 
-    
-    uint8_t _ret = 1;
+    uint8_t _ret = 0;
     ew32_file_t _fd = *ctx;
+    ew32_dev_t* _dev = 0;
 
-    ew32_semaphore_lock(__fd_table[_fd].lock, EW32_INFINITY);
+    if(_fd < 0 || _fd >= EW32_MAX_OPEN_FILES) return -EBADF;
 
-    while (1)
-    {
-        if(__fd_table[_fd].open_count == 0 || __fd_table[_fd].state != 1) 
-            { _ret = -EPROTO; break; }
+     _dev = __ew32_vfs_cheak_device(_fd, &_ret);
 
-        if(__fd_table[_fd].is_exclusive == 0 && __ew32_vfs_cheakother_exclusiv(_fd) == 1) 
-            { _ret = -EBUSY; break; }
-
-        ew32_dev_t* _dev = 0;
-        uint8_t _reet = ew32_vfsdb_getbyid(__fd_table[_fd].dev_index, &_dev);
-        if(_reet != 0 || _dev == 0) { _ret = -ENODEV; break; }
-
-        _ret = ew32_device_read(_dev, dst, size);
-        break;
-    };
-
-    ew32_semaphore_unlock(__fd_table[_fd].lock);
+    if(_dev != 0) _ret = ew32_device_read(_dev, dst, size);
 
     return _ret;
     
@@ -206,30 +249,13 @@ ssize_t ew32_vfs_fread (ew32_file_t* ctx, void * dst, size_t size) {
 ssize_t ew32_vfs_fwrite (ew32_file_t* ctx, void * dst, size_t size) {
     if(ctx == 0) return -EIO;
 
-    
-    uint8_t _ret = 1;
+    uint8_t _ret = 0;
     ew32_file_t _fd = *ctx;
+    ew32_dev_t* _dev = 0;
 
+    _dev = __ew32_vfs_cheak_device(_fd, &_ret);
 
-    ew32_semaphore_lock(__fd_table[_fd].lock, EW32_INFINITY);
-
-    while (1)
-    {
-        if(__fd_table[_fd].open_count == 0 || __fd_table[_fd].state != 1) 
-            { _ret = -EPROTO; break; }
-
-        if(__fd_table[_fd].is_exclusive == 0 && __ew32_vfs_cheakother_exclusiv(_fd) == 1) 
-            { _ret = -EBUSY; break; }
-
-        ew32_dev_t* _dev = 0;
-        uint8_t _reet = ew32_vfsdb_getbyid(__fd_table[_fd].dev_index, &_dev);
-        if(_reet != 0 || _dev == 0) { _ret = -ENODEV; break; }
-
-        _ret = ew32_device_send(_dev, dst, size);
-        break;
-    };
-
-    ew32_semaphore_unlock(__fd_table[_fd].lock);
+    if(_dev != 0) _ret = ew32_device_send(_dev, dst, size);
 
     return _ret;
 }
@@ -242,6 +268,7 @@ uint8_t ew32_vfs_fclose(ew32_file_t* ctx) {
 
     ew32_file_t _fd = *ctx;
 
+    ew32_semaphore_lock(__ew32_create_lock, EW32_INFINITY);
     while (1)
     {
         if(__fd_table[_fd].state != 1) { _ret = EPROTO; break; }
@@ -251,15 +278,16 @@ uint8_t ew32_vfs_fclose(ew32_file_t* ctx) {
         ew32_semaphore_unlock(__fd_table[_fd].lock);
         
         if(__fd_table[_fd].open_count == 0) {
-            ew32_semaphore_lock(__ew32_lock_open, EW32_INFINITY);
+            
             __fd_table[_fd].state = 0;
             __fd_table[_fd].is_exclusive = 0;
             __fd_table[_fd].dev_index = -1;
             ew32_semaphore_destroy_ex(__fd_table[_fd].lock,1);
-            ew32_semaphore_unlock(__ew32_lock_open);
+            
         }
         
     }
- 
+    ew32_semaphore_unlock(__ew32_create_lock);
+
     return 0;
 }

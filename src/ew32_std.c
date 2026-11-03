@@ -1,3 +1,23 @@
+/*
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * Copyright (c) 2026 Amber-Sophia "RoseLeBlood" Schröck (gender:divers dey/deren )
+ *
+ * This file is part of ew32_devm.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the European Union Public Licence (EUPL),
+ * version 1.2 or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You should have received a copy of the European Union Public Licence
+ * along with this program. If not, see:
+ * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ */
+
 #include "ew32_devm/ew32_std.h"
 
 #include "ew32_devm/ew32_config.h"
@@ -18,9 +38,7 @@ uint8_t ew32_std_probe(ew32_dev_t* device, void* cfg) {
 uint8_t ew32_std_setup(ew32_dev_t* device, void* cfg) {
     return 0;
 }
-uint8_t ew32_std_powerstate(ew32_dev_t* device, uint8_t state) {
-    return 0;
-}
+
 int32_t ew32_std_write(ew32_dev_t* device, void* data, int32_t size) {
     if(device == NULL) return -1;
 
@@ -103,7 +121,8 @@ uint8_t ew32_dev_std_setup(const uint8_t id, ew32_dev_t** device) {
     __global_std_device[id].type = EW32_DEVICE_TYPE_STREAM;
     __global_std_device[id].rw = (id == EW32_STDIN) ? EW32_DEVICE_READ_ONLY : EW32_DEVICE_WRITE_ONLY;
     __global_std_device[id].parent = NULL;
-    __global_std_device[id].powerstate = ew32_std_powerstate;
+    __global_std_device[id].set_state = 0;
+    __global_std_device[id].get_state = 0;
     __global_std_device[id].probe = ew32_std_probe;
     __global_std_device[id].setup = ew32_std_setup;
     __global_std_device[id].write = ew32_std_write;
@@ -111,6 +130,7 @@ uint8_t ew32_dev_std_setup(const uint8_t id, ew32_dev_t** device) {
 
     __global_std_device[id].raw_userdata = id;
     __global_std_device[id].parent = NULL;
+    __global_std_device[id].on_run = NULL;
 
     *device = &__global_std_device[id];
     return EW32_DEVICE_NO_ERROR;

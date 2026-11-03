@@ -1,3 +1,23 @@
+/*
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * Copyright (c) 2026 Amber-Sophia "RoseLeBlood" Schröck (gender:divers dey/deren )
+ *
+ * This file is part of ew32_devm.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the European Union Public Licence (EUPL),
+ * version 1.2 or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You should have received a copy of the European Union Public Licence
+ * along with this program. If not, see:
+ * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ */
+
 #include "ew32_devm/ew32_config.h"
 #include "ew32_devm/ew32_i2c.h"
 
@@ -7,7 +27,8 @@
 
 extern uint8_t ew32_i2c_probe(ew32_dev_t* device, void* cfg);
 extern uint8_t ew32_i2c_setup(ew32_dev_t* device, void* cfg);
-extern uint8_t ew32_i2c_powerstate(ew32_dev_t* device, uint8_t state);
+extern uint8_t ew32_i2c_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state);
+extern uint8_t ew32_i2c_get_state(ew32_dev_t* device, uint8_t state_id);
 extern int32_t ew32_i2c_write(ew32_dev_t* device, void* data, int32_t size);
 extern int32_t ew32_i2c_read(ew32_dev_t* device, void* data, int32_t size);
 extern uint8_t ew32_i2c_isadress(ew32_dev_t* device, uint8_t address);
@@ -17,7 +38,7 @@ static ew32_i2c_cfg_t __global_cfg[EW32_DEVICE_I2C_MAX_DEVICES];
 static uint8_t __i2c_device_used[EW32_DEVICE_I2C_MAX_DEVICES];
 
 
-uint8_t ew32_device_i2c_setup(uint8_t sda, uint8_t scl, uint8_t port_num, i2c_handler handler, ew32_dev_t** device) {
+uint8_t ew32_device_i2c_setup(uint8_t sda, uint8_t scl, uint8_t port_num, ew32_dev_t** device) {
     if(device == NULL) return EW32_DEVICE_ERROR_NULL;
     if(port_num >= EW32_DEVICE_I2C_MAX_DEVICES) return EW32_DEVICE_ERROR_INVALID_ARG;
     if(__i2c_device_used[port_num] == 1) return EW32_DEVICE_ERROR_ALLREADY_INIT;
@@ -29,7 +50,6 @@ uint8_t ew32_device_i2c_setup(uint8_t sda, uint8_t scl, uint8_t port_num, i2c_ha
     __global_cfg[port_num].pin_scl = scl;
     __global_cfg[port_num].pin_sda = sda;
     __global_cfg[port_num].port_num = port_num;
-    __global_cfg[port_num].handler = handler;
     __global_cfg[port_num].hardware = port_num > 2; // port 0 und 1 used hardware i2c
 
     
@@ -48,11 +68,13 @@ uint8_t ew32_device_i2c_setup(uint8_t sda, uint8_t scl, uint8_t port_num, i2c_ha
     __i2c_devices[port_num].type = EW32_DEVICE_TYPE_I2C;
     __i2c_devices[port_num].parent = NULL;
     __i2c_devices[port_num].rw =  EW32_DEVICE_READ_WRITE;
-    __i2c_devices[port_num].powerstate = ew32_i2c_powerstate;
+    __i2c_devices[port_num].set_state = ew32_i2c_set_state;
+    __i2c_devices[port_num].get_state = ew32_i2c_get_state;
     __i2c_devices[port_num].probe = ew32_i2c_probe;
     __i2c_devices[port_num].setup = ew32_i2c_setup;
     __i2c_devices[port_num].write = ew32_i2c_write;
     __i2c_devices[port_num].read = ew32_i2c_read;
+    __i2c_devices[port_num].on_run = NULL;
 
     __i2c_devices[port_num].userdata = &__global_cfg[port_num];
 

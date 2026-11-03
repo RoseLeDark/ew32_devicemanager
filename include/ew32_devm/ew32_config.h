@@ -1,9 +1,26 @@
-/**
- * @file ew32_config.h
- * @brief Global framework configuration and build-time options for ew32rs.
+/*
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * Copyright (c) 2026 Amber-Sophia "RoseLeBlood" Schröck (gender:divers dey/deren )
+ *
+ * This file is part of ew32_devm.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the European Union Public Licence (EUPL),
+ * version 1.2 or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You should have received a copy of the European Union Public Licence
+ * along with this program. If not, see:
+ * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  */
 
-#pragma once
+ #pragma once
+
+#include <ew32_base/ew32_config.h>
 
 /** @name Device Manager Allocation Modes */
 /// @{
@@ -11,23 +28,6 @@
 #define EW32_DYNAMIC                            1    /**< Dynamic allocation mode (if supported). */
 /// @}
 
-/** @name Configuration State Flags */
-/// @{
-#define EW32_CONFIG_YES                         1    /**< Affirmative state flag. */
-#define EW32_CONFIG_NO                          0    /**< Negative state flag. */
-/// @}
-
-/** @name Target Platform Identifiers */
-/// @{
-#define EW32_PLATFORM_ESP                       1    /**< Espressif ESP-IDF platform target. */
-#define EW32_PLATFORM_ARDUINO                   2    /**< Arduino framework target. */
-#define EW32_PLATFORM_STM32                     3    /**< STM32 microcontroller target. */
-#define EW32_PLATFORM_RPPICO                    4    /**< Raspberry PI Pico microcontroller target. */
-
-#define EW32_PLATFORM_TAKSAPI_RTOS                  1   /**< RTOS as driver tasks */
-#define EW32_PLATFORM_TAKSAPI_TIMER                 2   /**< timer as driver tasks */
-#define EW32_PLATFORM_TAKSAPI_ASYNC                 3   /**< Raspberry PI Pico FreeRTOS + async as driver tasks */
-/// @}
 
 /// ================        CONFIG START        ================
 
@@ -35,8 +35,6 @@
 #ifndef EW32_DEVICE_I2C_MAX_DEVICES
     #define EW32_DEVICE_I2C_MAX_DEVICES         2
 #endif
-
-
 
 /** @brief Enable or disable I2C bus subsystem support. */
 #ifndef EW32_DEVICE_USE_I2C   
@@ -110,40 +108,18 @@
 #define EW32_VFS_DELIMETER                       '/'
 #endif
 
-/// ================ DO NOT EDIT AFTER THIS LINE ================
-
-
-#ifndef EW32_FREERTOS_ON_CORE
-#define EW32_FREERTOS_ON_CORE 0
-#endif
-
-#ifndef EW32_PLATFORM
-#error "No Platform Defined, please set build flag -DEW32_PLATFORM={PLATFORMID}" 
-#endif
-
-#if EW32_PLATFORM == EW32_PLATFORM_ESP
-#define EW32_TASKAPI_PLATFORM   EW32_PLATFORM_TAKSAPI_RTOS
-#define EW32_TASK_IDLE_PRIORITY 0U
-
-#endif
-
-#if EW32_PLATFORM == EW32_PLATFORM_RPPICO
-#define EW32_TASKAPI_PLATFORM   EW32_PLATFORM_TAKSAPI_RTOS
-#define EW32_TASK_IDLE_PRIORITY 0U
-#endif
-
-
-#include <stdint.h>
 
 #if EW32_MAX_OPEN_FILES >= __INT16_MAX__
     typedef int32_t ew32_file_t;
+    typedef int32_t ew32_devid_t;
 #elif EW32_MAX_OPEN_FILES >= __INT8_MAX__     
     typedef int16_t ew32_file_t;
+    typedef int16_t ew32_devid_t;
 #else
    typedef int8_t ew32_file_t;
+   typedef int8_t ew32_devid_t;
 #endif
 
 
 
 
-#define EW32_WEAK __attribute__((weak))
