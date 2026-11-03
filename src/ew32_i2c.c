@@ -21,6 +21,7 @@
 #include "ew32_devm/ew32_config.h"
 #include "ew32_devm/ew32_i2c.h"
 
+
 #include "string.h"
 
 #if EW32_DEVICE_USE_I2C == 1

@@ -20,9 +20,10 @@
 
 #include "ew32_devm/ew32_config.h"
 
-#if EW32_PLATFORM == EW32_PLATFORM_ARDUINO ||  EW32_PLATFORM_RPPICO 
+#if EW32_PLATFORM == EW32_PLATFORM_ARDUINO ||  EW32_PLATFORM_RPPICO || EW32_PLATFORM_ARDUINO_ESP32
 #include "ew32_devm/ew32_i2c.h"
 #include "ew32_base/ew32_logging.h"
+#include "ew32_devm/ew32_gpio.h"
 
 #include <stdio.h>
 
@@ -57,7 +58,7 @@ uint8_t ew32_i2c_probe(ew32_dev_t* device, void*) {
 
         if (error == 0) {
             handle->address_set[address] = 1;
-            //xewLoggingInfo1("I2C", "Found device 0x%02X", address);
+            xewLoggingInfo1("I2C", "Found device 0x%02X\n", address);
         }
         
     }
@@ -75,7 +76,12 @@ uint8_t ew32_i2c_setup(ew32_dev_t* device, void*) {
     #else
         wire.begin(handle->pin_sda,handle->pin_scl);
     #endif
+
+    ew32_device_gpio_can_used_pin(handle->pin_sda);
+    ew32_device_gpio_can_used_pin(handle->pin_scl);
     
+    ew32_device_gpio_marked_pin(handle->pin_sda, OUTPUT, EW32_DEVICE_GPIO_USED_I2C);
+    ew32_device_gpio_marked_pin(handle->pin_scl, OUTPUT, EW32_DEVICE_GPIO_USED_I2C);
 
     return EW32_DEVICE_NO_ERROR;
 }

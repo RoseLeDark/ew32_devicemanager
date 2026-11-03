@@ -11,6 +11,8 @@
 #include <string.h>
 
 /** 
+ * BUILD WITH: build_flags = -DEW32_PLATFORM=3 on ESP32 | -DEW32_PLATFORM=5 on RP Pico 2040
+ * 
  * Example Output on ESP32 - Arduino
  * --- More details at https://bit.ly/pio-monitor-filters
  * --- Quit: Ctrl+C | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
