@@ -50,7 +50,7 @@ uint8_t ew32_powermanager_get_state(ew32_dev_t* device, uint8_t stateid) {
 }
 uint8_t ew32_powermanager_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state) {
     if(state_id == EW32_DEVICE_STATEID_MODE) {
-        xewLoggingDebug1("PM", "set to power state: %d\n", state);
+        xewLoggingDebug1(device->subpath, "set mode state to: %d\n", state);
         device->state = state;
     }
     return 0;
@@ -92,7 +92,7 @@ int32_t ew32_powermanager_read(ew32_dev_t* device, void* data, int32_t size) {
 
 void ew32_powermanager_onrun(struct ew32device* device, uint64_t ticks) {
     if(device->state == EW32_DEVICE_STATE_SUSPEND) {
-        xewLoggingDebug("PM", "PowerManager is suspend\n");
+        xewLoggingDebug(device->subpath, "PowerManager is suspend\n");
     }
     if(device->userdata == NULL) return ;
     ew32_power_cfg_t* _pstate = (ew32_power_cfg_t*)device->userdata;

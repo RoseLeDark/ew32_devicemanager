@@ -58,7 +58,7 @@ uint8_t ew32_i2c_probe(ew32_dev_t* device, void*) {
 
         if (error == 0) {
             handle->address_set[address] = 1;
-            xewLoggingInfo1("I2C", "Found device 0x%02X\n", address);
+            xewLoggingInfo1(device->subpath, "Found device 0x%02X\n", address);
         }
         
     }
