@@ -18,4 +18,4 @@
  * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  */
 
-#include <ew32_base/ew32_api.h>
+#include <ew32_base/osa/ew32_api.h>

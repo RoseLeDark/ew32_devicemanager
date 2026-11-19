@@ -45,7 +45,7 @@ int32_t ew32_device_send(ew32_dev_t* device, void* data, int32_t size) {
 
         i++;
 
-        ew32_task_delay(500);
+        ew32_osa_delay(500);
     };
 
     return datasended;
@@ -68,7 +68,7 @@ int32_t ew32_device_read(ew32_dev_t* device, void* data, int32_t size) {
         if(dataread >= 0) break;
 
         i++;
-        ew32_task_delay(500);
+        ew32_osa_delay(500);
     };
 
     return dataread;
@@ -88,7 +88,7 @@ uint8_t ew32_device_pstate(ew32_dev_t* device, uint8_t state) {
 
         if(_ret == EW32_DEVICE_ERROR_WAIT) {
             i++;
-            ew32_task_delay(500);
+            ew32_osa_delay(500);
             continue;
         } 
         break;

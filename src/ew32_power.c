@@ -23,9 +23,9 @@
 #include <ew32_base/ew32_logging.h>
 #include <ew32_devm/ew32_devm.h>
 #include <stddef.h>
+#include <string.h>
 
-
-
+#define DEVICE __global_ew32_powerstate_device__
 
 
 ew32_semaphore_t __ew32_powerstate_lock;
@@ -42,7 +42,7 @@ uint8_t ew32_powermanager_probe(ew32_dev_t* device, void* cfg) {
     return 0;
 }
 uint8_t ew32_powermanager_setup(ew32_dev_t* device, void* cfg) {
-    __ew32_powerstate_lock = ew32_semaphore_create(EW32_SEMAPHORE_BIN_MUTEX);
+    __ew32_powerstate_lock = ew32_osa_smph_binary_create();
     return 0;
 }
 uint8_t ew32_powermanager_get_state(ew32_dev_t* device, uint8_t stateid) {
@@ -65,9 +65,9 @@ int32_t ew32_powermanager_write(ew32_dev_t* device, void* data, int32_t size) {
 
         if(_msg->msg == EW32_POWERMANAGER_NEW_STATE) {
 
-            ew32_semaphore_lock(__ew32_powerstate_lock, EW32_INFINITY);
+            ew32_osa_smph_lock_ex(__ew32_powerstate_lock, EW32_INFINITY, 0);
             _pstate->_soll = _msg->state;
-            ew32_semaphore_unlock(__ew32_powerstate_lock);
+            ew32_osa_smph_unlock_ex(__ew32_powerstate_lock, 0);
         }
     }
 
@@ -81,9 +81,9 @@ int32_t ew32_powermanager_read(ew32_dev_t* device, void* data, int32_t size) {
         ew32_powermanager_io_t *_msg = (ew32_powermanager_io_t*)data;
 
         if(_msg->msg == EW32_POWERMANAGER_GET_STATE) {
-            ew32_semaphore_lock(__ew32_powerstate_lock, EW32_INFINITY);
+            ew32_osa_smph_lock_ex(__ew32_powerstate_lock, EW32_INFINITY, EW32_NO);
             _msg->state = _pstate->_current;
-            ew32_semaphore_unlock(__ew32_powerstate_lock);
+            ew32_osa_smph_unlock_ex(__ew32_powerstate_lock, EW32_NO);
         }
     }
     return size;
@@ -115,8 +115,8 @@ void ew32_powermanager_onrun(struct ew32device* device, uint64_t ticks) {
     }
 }
 
-ew32_dev_t __global_powermanager;
-ew32_power_cfg_t __global_powermanager_state;
+ew32_dev_t DEVICE;
+ew32_power_cfg_t DEVICE_state;
 
 
 
@@ -127,34 +127,37 @@ void ew32_device_powermanager_sethandle(ew32_powermanager_handle test, ew32_powe
 uint8_t ew32_device_powermanager_setup(ew32_dev_t** device){
     if(device == NULL) return EW32_DEVICE_ERROR_NULL;
 
-    __global_powermanager.subpath[0] = 'b';
-    __global_powermanager.subpath[1] = 'u';
-    __global_powermanager.subpath[2] = 's';
-    __global_powermanager.subpath[3] = EW32_VFS_DELIMETER;
-    __global_powermanager.subpath[4] = 'p';
-    __global_powermanager.subpath[5] = 'm';
-    __global_powermanager.subpath[6] = 'n';
-    __global_powermanager.subpath[7] = '0';
+    DEVICE.subpath[0] = 'b';
+    DEVICE.subpath[1] = 'u';
+    DEVICE.subpath[2] = 's';
+    DEVICE.subpath[3] = EW32_VFS_DELIMETER;
+    DEVICE.subpath[4] = 'p';
+    DEVICE.subpath[5] = 'm';
+    DEVICE.subpath[6] = 'n';
+    DEVICE.subpath[7] = '0';
 
     // Instanz initialisieren
-    __global_powermanager.cls = ES32_DEVICE_CLASS_VIRTUAL;
-    __global_powermanager.type = EW32_DEVICE_TYPE_POWERMANAGER;
-    __global_powermanager.parent = NULL;
-    __global_powermanager.on_run_r = ew32_powermanager_onrun;
-    __global_powermanager.rw =  EW32_DEVICE_READ_WRITE;
-    __global_powermanager.set_state = ew32_powermanager_set_state;
-    __global_powermanager.get_state = ew32_powermanager_get_state;
-    __global_powermanager.probe = ew32_powermanager_probe;
-    __global_powermanager.setup = ew32_powermanager_setup;
-    __global_powermanager.write = ew32_powermanager_write;
-    __global_powermanager.read = ew32_powermanager_read;
+    DEVICE.cls = ES32_DEVICE_CLASS_VIRTUAL;
+    DEVICE.type = EW32_DEVICE_TYPE_POWERMANAGER;
+    DEVICE.parent = NULL;
+    DEVICE.on_run_r = ew32_powermanager_onrun;
+    DEVICE.rw =  EW32_DEVICE_READ_WRITE;
+    DEVICE.set_state = ew32_powermanager_set_state;
+    DEVICE.get_state = ew32_powermanager_get_state;
+    DEVICE.probe = ew32_powermanager_probe;
+    DEVICE.setup = ew32_powermanager_setup;
+    DEVICE.write = ew32_powermanager_write;
+    DEVICE.read = ew32_powermanager_read;
 
-    __global_powermanager_state._current = 5;
-    __global_powermanager_state._soll = 5;
-    __global_powermanager.userdata = &__global_powermanager_state;
-    __global_powermanager.state =EW32_DEVICE_STATE_SUSPEND;
+    DEVICE_state._current = 5;
+    DEVICE_state._soll = 5;
+    DEVICE.userdata = &DEVICE_state;
 
-    *device = &__global_powermanager;
+    DEVICE.state =EW32_DEVICE_STATE_SUSPEND;
+
+   *device = &DEVICE;
+
+   //memcpy(*device, &DEVICE, sizeof(ew32_dev_t));
 
 
     return EW32_DEVICE_NO_ERROR;

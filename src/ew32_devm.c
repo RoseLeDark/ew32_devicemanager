@@ -322,5 +322,5 @@ void ew32_devicemanager_loop(void* arg) {
             }
         }
     }
-    ew32_task_delay(1);
+    ew32_osa_delay(1);
 }

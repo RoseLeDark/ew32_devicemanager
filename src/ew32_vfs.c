@@ -115,8 +115,8 @@ uint8_t ew32_vfs_init()  {
     if(_created == 1) return 0;
     _created = 1;
 
-    __ew32_excl_lock = ew32_semaphore_create(EW32_SEMAPHORE_MUTEX);
-    __ew32_create_lock = ew32_semaphore_create(EW32_SEMAPHORE_MUTEX);
+    __ew32_excl_lock = ew32_osa_smph_mutex_create();
+    __ew32_create_lock = ew32_osa_smph_mutex_create();
 
     return 0;
 }
@@ -134,7 +134,7 @@ uint8_t __ew32_vfs_cheakother_exclusiv(ew32_file_t me) {
         }
     }
 
-    ew32_semaphore_unlock(__ew32_excl_lock);
+    ew32_osa_smph_unlock(__ew32_excl_lock);
 
     return _ret;
 }
@@ -158,7 +158,7 @@ ew32_dev_t* __ew32_vfs_cheak_device(ew32_file_t _fd, uint8_t* _ret) {
 
     if(_fd < 0 || _fd >= EW32_MAX_OPEN_FILES) return 0;
 
-    ew32_semaphore_lock(__ew32_create_lock, EW32_INFINITY);
+    ew32_osa_smph_lock(__ew32_create_lock, EW32_INFINITY);
     while (1)
     {
         if(__fd_table[_fd].open_count == 0 || __fd_table[_fd].state != 1) 
@@ -170,7 +170,7 @@ ew32_dev_t* __ew32_vfs_cheak_device(ew32_file_t _fd, uint8_t* _ret) {
         
         break;
     };
-    ew32_semaphore_unlock(__ew32_create_lock);
+    ew32_osa_smph_unlock(__ew32_create_lock);
 
     *_ret = 0;
     return _dev;
@@ -207,7 +207,7 @@ uint8_t ew32_vfs_fopen(ew32_file_t* ctx, const char * path, int flags, int mode)
             _ret = EBUSY; break; // Already exclusive
         } 
 
-        __fd_table[_newfd].lock = ew32_semaphore_create(EW32_SEMAPHORE_MUTEX);
+        __fd_table[_newfd].lock = ew32_osa_smph_mutex_create();
         __fd_table[_newfd].state = 1;
         __fd_table[_newfd].open_count = 1;
         __fd_table[_newfd].dev_index = _db_entry;
@@ -220,7 +220,7 @@ uint8_t ew32_vfs_fopen(ew32_file_t* ctx, const char * path, int flags, int mode)
 
         break;
     };
-    ew32_semaphore_unlock(__ew32_create_lock);
+    ew32_osa_smph_unlock(__ew32_create_lock);
 
     return _ret;
 }
@@ -275,19 +275,19 @@ uint8_t ew32_vfs_fclose(ew32_file_t* ctx) {
 
         ew32_semaphore_lock(__fd_table[_fd].lock, EW32_INFINITY);
         __fd_table[_fd].open_count--;
-        ew32_semaphore_unlock(__fd_table[_fd].lock);
+        ew32_osa_smph_unlock(__fd_table[_fd].lock);
         
         if(__fd_table[_fd].open_count == 0) {
             
             __fd_table[_fd].state = 0;
             __fd_table[_fd].is_exclusive = 0;
             __fd_table[_fd].dev_index = -1;
-            ew32_semaphore_destroy_ex(__fd_table[_fd].lock,1);
+            ew32_osa_smph_desroy(__fd_table[_fd].lock);
             
         }
         
     }
-    ew32_semaphore_unlock(__ew32_create_lock);
+    ew32_osa_smph_unlock(__ew32_create_lock);
 
     return 0;
 }
