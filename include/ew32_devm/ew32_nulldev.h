@@ -37,7 +37,7 @@ extern "C" {
  * @param device Double pointer to receive the created virtual device instance.
  * @return uint8_t EW32_DEVICE_NO_ERROR on success, or an error code on failure.
  */
-uint8_t ew32_device_virtualnull_setup(ew32_dev_t* parent, ew32_dev_t** device);
+uint8_t ew32_device_virtualnull_setup();
 
 #ifdef __cplusplus
 }

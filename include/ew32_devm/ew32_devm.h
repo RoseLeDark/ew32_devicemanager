@@ -26,6 +26,7 @@
 #define EW32_DEVICEMANAGER_STATE_PROBE      2
 #define EW32_DEVICEMANAGER_STATE_SETUP      3
 #define EW32_DEVICEMANAGER_STATE_RUNNING    4
+#define EW32_DEVICEMANAGER_STATE_ALL        5
 
 #define EW32_DEVICEMANAGER_ALL              -1
 
@@ -57,10 +58,10 @@ void ew32_devicemanager_powerstate_set(uint8_t newState);
 void ew32_devicemanager_dump(uint8_t level );
 
 uint8_t ew32_devicemanager_setstate(const char* path, uint8_t state_id, uint8_t state);
-uint8_t ewi32_devicemanager_setstate(ew32_devid_t id, uint8_t state_id, uint8_t state);
+uint8_t ew32_devicemanager_setstate_by_id(ew32_devid_t id, uint8_t state_id, uint8_t state);
 
 uint8_t ew32_devicemanager_getstate(const char* path, uint8_t state_id);
-uint8_t ewi32_devicemanager_getstate(ew32_devid_t id, uint8_t state_id);
+uint8_t ew32_devicemanager_getstate_by_id(ew32_devid_t id, uint8_t state_id);
 
 
 void ew32_devicemanager_loop(void* arg);

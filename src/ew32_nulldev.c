@@ -23,6 +23,7 @@
 #include <ew32_base/ew32_logging.h>
 #include <stddef.h>
 #include <string.h>
+#include "ew32_devm/ew32_devm.h"
 
 uint8_t ew32_nulldev_probe(ew32_dev_t* device, void* cfg) {
     xewLoggingDebug("/dev/null", "ew32_nulldev_probe\n");
@@ -56,8 +57,6 @@ int32_t ew32_nulldev_read(ew32_dev_t* device, void* data, int32_t size) {
 ew32_dev_t __global_device;
 
 uint8_t ew32_device_virtualnull_setup(ew32_dev_t* parent, ew32_dev_t** device) {
-    if(device == NULL) return EW32_DEVICE_ERROR_NULL;
-
     // Instanz initialisieren
     __global_device.subpath[0] = 'n';
     __global_device.subpath[1] = 'u';
@@ -78,6 +77,6 @@ uint8_t ew32_device_virtualnull_setup(ew32_dev_t* parent, ew32_dev_t** device) {
     __global_device.userdata = NULL;
     __global_device.parent = parent;
 
-    *device = &__global_device;
-    return EW32_DEVICE_NO_ERROR;
+    //*device = &__global_device;
+    return ew32_devicemanager_registdevice(&__global_device, NULL, 1);
 }

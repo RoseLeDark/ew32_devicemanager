@@ -25,107 +25,129 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "ew32_devm/ew32_devm.h"
+
 #define DEVICE __global_ew32_powerstate_device__
-
-
-ew32_semaphore_t __ew32_powerstate_lock;
-ew32_powermanager_handle __gloable_test;
-ew32_powermanager_prechange __gloabel_prechange;
 
 
 typedef struct ew32_powermanager_cfg {
     uint8_t _current;
-    uint8_t _soll ;
-}ew32_power_cfg_t;
+    uint8_t _soll;
+
+    ew32_powermanager_handle test;
+    ew32_powermanager_prechange prechange;
+} ew32_power_cfg_t;
+
+ew32_dev_t DEVICE;
 
 uint8_t ew32_powermanager_probe(ew32_dev_t* device, void* cfg) {
     return 0;
 }
+
 uint8_t ew32_powermanager_setup(ew32_dev_t* device, void* cfg) {
-    __ew32_powerstate_lock = ew32_osa_smph_binary_create();
+    if (device == NULL || device->userdata == NULL) return EW32_DEVICE_ERROR_NULL;
+    ew32_power_cfg_t* _pstate = (ew32_power_cfg_t*)device->userdata;
+
     return 0;
 }
+
 uint8_t ew32_powermanager_get_state(ew32_dev_t* device, uint8_t stateid) {
-    return (stateid == EW32_DEVICE_STATEID_POWERSTATE) ? 5 : 0;
+    if (device == NULL) return 0;
+    return (stateid == EW32_DEVICE_STATEID_POWERSTATE) ? device->state : 0;
 }
+
+
 uint8_t ew32_powermanager_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state) {
-    if(state_id == EW32_DEVICE_STATEID_MODE) {
+    if (device == NULL) return EW32_DEVICE_ERROR_NULL;
+    if (state_id == EW32_DEVICE_STATEID_MODE) {
         xewLoggingDebug1(device->subpath, "set mode state to: %d\n", state);
         device->state = state;
     }
     return 0;
 }
-int32_t ew32_powermanager_write(ew32_dev_t* device, void* data, int32_t size) {
 
-    if(device->userdata == NULL) return -1;
+int32_t ew32_powermanager_write(ew32_dev_t* device, void* data, int32_t size) {
+    if (device == NULL || device->userdata == NULL) return -1;
     ew32_power_cfg_t* _pstate = (ew32_power_cfg_t*)device->userdata;
 
-    if(data != NULL && size == sizeof(ew32_powermanager_io_t)) {
-        ew32_powermanager_io_t *_msg = (ew32_powermanager_io_t*)data;
+    if (data != NULL && size == sizeof(ew32_powermanager_io_t)) {
+        ew32_powermanager_io_t* _msg = (ew32_powermanager_io_t*)data;
 
-        if(_msg->msg == EW32_POWERMANAGER_NEW_STATE) {
-
-            ew32_osa_smph_lock_ex(__ew32_powerstate_lock, EW32_INFINITY, 0);
+        if (_msg->msg == EW32_POWERMANAGER_NEW_STATE) {
             _pstate->_soll = _msg->state;
-            ew32_osa_smph_unlock_ex(__ew32_powerstate_lock, 0);
         }
     }
 
     return size;
 }
+
+
 int32_t ew32_powermanager_read(ew32_dev_t* device, void* data, int32_t size) {
-    if(device->userdata == NULL) return -1;
+    if (device == NULL || device->userdata == NULL) return -1;
     ew32_power_cfg_t* _pstate = (ew32_power_cfg_t*)device->userdata;
 
-    if(data != NULL && size == sizeof(ew32_powermanager_io_t)) {
-        ew32_powermanager_io_t *_msg = (ew32_powermanager_io_t*)data;
+    if (data != NULL && size == sizeof(ew32_powermanager_io_t)) {
+        ew32_powermanager_io_t* _msg = (ew32_powermanager_io_t*)data;
 
-        if(_msg->msg == EW32_POWERMANAGER_GET_STATE) {
-            ew32_osa_smph_lock_ex(__ew32_powerstate_lock, EW32_INFINITY, EW32_NO);
+        if (_msg->msg == EW32_POWERMANAGER_GET_STATE) {
             _msg->state = _pstate->_current;
-            ew32_osa_smph_unlock_ex(__ew32_powerstate_lock, EW32_NO);
         }
     }
+
     return size;
 }
 
 
 void ew32_powermanager_onrun(struct ew32device* device, uint64_t ticks) {
-    if(device->state == EW32_DEVICE_STATE_SUSPEND) {
+    if (device == NULL) return;
+
+    if (device->state == EW32_DEVICE_STATE_SUSPEND) {
         xewLoggingDebug(device->subpath, "PowerManager is suspend\n");
     }
-    if(device->userdata == NULL) return ;
+    if (device->userdata == NULL) return;
+
     ew32_power_cfg_t* _pstate = (ew32_power_cfg_t*)device->userdata;
 
+    uint8_t _current = _pstate->_current;
     uint8_t _soll = _pstate->_soll;
+    ew32_powermanager_handle _test = _pstate->test;
+    ew32_powermanager_prechange _prechange = _pstate->prechange;
 
-    if(_soll == _pstate->_current && (__gloable_test != NULL) ) {
-        _soll = __gloable_test(_pstate->_current);
+
+    if (_soll == _current && (_test != NULL)) {
+        _soll = _test(_current);
     }
 
-    if(_soll != _pstate->_current) {
-        uint8_t _mustChange =  (__gloabel_prechange == 0) ? 1 : __gloabel_prechange(_pstate->_current, _soll) == 0;
+    if (_soll != _current) {
+        uint8_t _mustChange = (_prechange == NULL) ? 1 : (_prechange(_current, _soll) == 0);
 
-        if(_mustChange) {
+        if (_mustChange) {
             _pstate->_current = _soll;
             _pstate->_soll = _soll;
 
-            ew32_devicemanager_powerstate_set(_pstate->_soll);
+            ew32_devicemanager_powerstate_set(_soll);
         }
     }
 }
 
-ew32_dev_t DEVICE;
-ew32_power_cfg_t DEVICE_state;
+
 
 
 
 void ew32_device_powermanager_sethandle(ew32_powermanager_handle test, ew32_powermanager_prechange prechange) {
-    __gloable_test = test;
-    __gloabel_prechange = prechange;
+    if (DEVICE.userdata == NULL) return;
+    ew32_power_cfg_t* _pstate = (ew32_power_cfg_t*)DEVICE.userdata;
+
+    _pstate->test = test;
+    _pstate->prechange = prechange;
 }
+
 uint8_t ew32_device_powermanager_setup(ew32_dev_t** device){
-    if(device == NULL) return EW32_DEVICE_ERROR_NULL;
+
+    static ew32_power_cfg_t _cfg;
+    memset(&_cfg, 0, sizeof(ew32_power_cfg_t));
+    _cfg._current = 5;
+    _cfg._soll = 5;
 
     DEVICE.subpath[0] = 'b';
     DEVICE.subpath[1] = 'u';
@@ -149,16 +171,11 @@ uint8_t ew32_device_powermanager_setup(ew32_dev_t** device){
     DEVICE.write = ew32_powermanager_write;
     DEVICE.read = ew32_powermanager_read;
 
-    DEVICE_state._current = 5;
-    DEVICE_state._soll = 5;
-    DEVICE.userdata = &DEVICE_state;
+    DEVICE.userdata = &_cfg;
 
     DEVICE.state =EW32_DEVICE_STATE_SUSPEND;
 
-   *device = &DEVICE;
+   //*device = &DEVICE;
 
-   //memcpy(*device, &DEVICE, sizeof(ew32_dev_t));
-
-
-    return EW32_DEVICE_NO_ERROR;
+    return ew32_devicemanager_registdevice(&DEVICE, NULL, 1);
 }

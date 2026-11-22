@@ -25,12 +25,15 @@
 #include <ew32_base/ew32_logging.h>
 #include <stddef.h>
 #include <string.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "ew32_devm/ew32_devm.h"
 
 #define EW32_DEVICE_CLASS_INSTD     0x99
+#define DEVICE __global_ew32_virtualdev_device__
+
+ew32_dev_t DEVICE[3];
 
 uint8_t ew32_std_probe(ew32_dev_t* device, void* cfg) {
     return 0;
@@ -40,7 +43,7 @@ uint8_t ew32_std_setup(ew32_dev_t* device, void* cfg) {
 }
 
 int32_t ew32_std_write(ew32_dev_t* device, void* data, int32_t size) {
-    if(device == NULL) return -1;
+    if (device == NULL || data == NULL || size <= 0) return -1;
 
     char* __inf = (char*)data;
     int _user = device->raw_userdata;
@@ -48,90 +51,101 @@ int32_t ew32_std_write(ew32_dev_t* device, void* data, int32_t size) {
     int32_t _ret = size;
 
     if(_user == EW32_STDOUT) {
-        if(parent == NULL) xewLoggingInfo("stdout", __inf); 
-        else _ret = ew32_device_send(parent, data, size);
+        if (parent == NULL) {
+            xewLoggingSerial(EW32_LOGGING_LEVEL_DEBUG, "stdout", "%.*s", (int)size, (const char*)data);
+        } else {
+            _ret = ew32_device_send(parent, data, size);
+        }
     } else if(_user == EW32_STDERR) {
-        if(parent == NULL) xewLoggingError("stdout", __inf); 
-        else _ret = ew32_device_send(parent, data, size);
+        if (parent == NULL) {
+            xewLoggingSerial(EW32_LOGGING_LEVEL_DEBUG, "stderr", "%.*s", (int)size, (const char*)data);
+        } else {
+            _ret = ew32_device_send(parent, data, size);
+        }
     }
 
     return size;
 }
 int32_t ew32_std_read(ew32_dev_t* device, void* data, int32_t size) {
-    if(device == NULL) return -1;
+    if (device == NULL || data == NULL || size <= 0) return -1;
+
     int _user = device->raw_userdata;
     ew32_dev_t *parent = device->parent;
     int32_t _ret = size;
 
-    if(_user != EW32_STDIN) return 0;
+    if (_user != EW32_STDIN) return 0;
 
-    if(parent != NULL) {
-        char *_buf = (char*)data;
-        char _n ;
-        int32_t _i = 0;
-
-        while (_i < size) {
-            _n = getc (stdin);
-            if (_n == EOF ) break;
-            _buf[_i] = _n;
-        };
-
-        _ret = _i;
-    } else {
-        _ret = ew32_device_read(parent, data, size);
+    if (parent != NULL) {
+        return ew32_device_read(parent, data, size);
     }
 
-    return _ret;
+    char* _buf = (char*)data;
+    int32_t _i = 0;
+
+    while (_i < size) {
+        int _c = getc(stdin);
+        if (_c == EOF) break;
+        _buf[_i++] = (char)_c;
+    }
+
+    return _i;
 }
 
-ew32_dev_t __global_std_device[3];
+
 
 
 void ew32_dev_std_setdevice(const uint8_t id, ew32_dev_t* parent) {
-    if (strcmp(parent->subpath, __global_std_device[id].subpath) == 0)  
-        __global_std_device[id].parent = NULL;
+    if (id >= 3) return;
 
-    __global_std_device[id].parent = parent;
+    if (parent != NULL && strcmp(parent->subpath, DEVICE[id].subpath) == 0) {
+        DEVICE[id].parent = NULL;
+        return;
+    }
+
+    DEVICE[id].parent = parent;
 }
 
 uint8_t ew32_dev_std_setup(const uint8_t id, ew32_dev_t** device) {
-    if(device == NULL) return EW32_DEVICE_ERROR_NULL;
+  
+    if (id >= 3) return EW32_DEVICE_ERROR_INVALID_ARG; /* bzw. dein passender Fehlercode */
+    
+    memset(&DEVICE[id], 0, sizeof(ew32_dev_t));
 
     // Instanz initialisieren
-    __global_std_device[id].subpath[0] = 's';
-    __global_std_device[id].subpath[1] = 't';
-    __global_std_device[id].subpath[2] = 'd';
+    DEVICE[id].subpath[0] = 's';
+    DEVICE[id].subpath[1] = 't';
+    DEVICE[id].subpath[2] = 'd';
 
     if(id == EW32_STDOUT)  {
-        __global_std_device[id].subpath[3] = 'o';
-        __global_std_device[id].subpath[4] = 'u';
-        __global_std_device[id].subpath[5] = 't';
+        DEVICE[id].subpath[3] = 'o';
+        DEVICE[id].subpath[4] = 'u';
+        DEVICE[id].subpath[5] = 't';
     }
     if(id == EW32_STDERR)  {
-        __global_std_device[id].subpath[3] = 'e';
-        __global_std_device[id].subpath[4] = 'r';
-        __global_std_device[id].subpath[5] = 'r';
+        DEVICE[id].subpath[3] = 'e';
+        DEVICE[id].subpath[4] = 'r';
+        DEVICE[id].subpath[5] = 'r';
     }
     if(id == EW32_STDIN)  {
-        __global_std_device[id].subpath[3] = 'i';
-        __global_std_device[id].subpath[4] = 'n';
+        DEVICE[id].subpath[3] = 'i';
+        DEVICE[id].subpath[4] = 'n';
     }
 
-    __global_std_device[id].cls = EW32_DEVICE_CLASS_INSTD;
-    __global_std_device[id].type = EW32_DEVICE_TYPE_STREAM;
-    __global_std_device[id].rw = (id == EW32_STDIN) ? EW32_DEVICE_READ_ONLY : EW32_DEVICE_WRITE_ONLY;
-    __global_std_device[id].parent = NULL;
-    __global_std_device[id].set_state = 0;
-    __global_std_device[id].get_state = 0;
-    __global_std_device[id].probe = ew32_std_probe;
-    __global_std_device[id].setup = ew32_std_setup;
-    __global_std_device[id].write = ew32_std_write;
-    __global_std_device[id].read = ew32_std_read;
+    DEVICE[id].cls = EW32_DEVICE_CLASS_INSTD;
+    DEVICE[id].type = EW32_DEVICE_TYPE_STREAM;
+    DEVICE[id].rw = (id == EW32_STDIN) ? EW32_DEVICE_READ_ONLY : EW32_DEVICE_WRITE_ONLY;
+    DEVICE[id].parent = NULL;
+    DEVICE[id].set_state = 0;
+    DEVICE[id].get_state = 0;
+    DEVICE[id].probe = ew32_std_probe;
+    DEVICE[id].setup = ew32_std_setup;
+    DEVICE[id].write = ew32_std_write;
+    DEVICE[id].read = ew32_std_read;
 
-    __global_std_device[id].raw_userdata = id;
-    __global_std_device[id].parent = NULL;
-    __global_std_device[id].on_run = NULL;
+    DEVICE[id].raw_userdata = id;
+    DEVICE[id].parent = NULL;
+    DEVICE[id].on_run = NULL;
 
-    *device = &__global_std_device[id];
-    return EW32_DEVICE_NO_ERROR;
+    //*device = &DEVICE[id];
+    return ew32_devicemanager_registdevice(&DEVICE[id], NULL, 1);
 }

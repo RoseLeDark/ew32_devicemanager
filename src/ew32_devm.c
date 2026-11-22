@@ -29,6 +29,7 @@
 #include "ew32_devm/ew32_nulldev.h"
 #include "ew32_devm/ew32_std.h"
 #include "ew32_base/ew32_logging.h"
+#include "ew32_devm/ew32_uart.h"
 
 typedef struct ew32_devmanager_entry {
     ew32_dev_t* device;
@@ -39,13 +40,6 @@ typedef struct ew32_devmanager_entry {
 ew32_devm_entry_t __devman[EW32_DEVICE_MANAGER_DEVICES];
 uint8_t           __devm_global_state = 0;
 
-
-#define __ew32_devicemanager_add_device(ID) \
-    ew32_device_probe(__devman[ID].device, NULL); \
-    ew32_device_setup(__devman[ID].device, NULL); \
-    __devman[ID].probe_state = EW32_DEVICEMANAGER_STATE_RUNNING; \
-    __devman[ID].device->id = ew32_vfsdb_regist_device(__devman[ID].device->subpath, __devman[ID].device, 1);
-
 uint8_t ew32_devicemanager_create(){
     if(__devm_global_state != 0) return 0;
      __devm_global_state = EW32_DEVICEMANAGER_STATE_INIT;
@@ -55,27 +49,30 @@ uint8_t ew32_devicemanager_create(){
         __devman[i].probe_state = -1;
         __devman[i].cfg = NULL;
     }
+ 
+#if EW32_DEVICE_USE_UART == 1
+    ew32_device_uart_setup_ex( EW32_DEVICE_UART_STDPORT, EW32_DEVICE_UART_STDPORT_BAUD, 0x800001c /*SERIAL_8N1*/, 
+                               EW32_DEVICE_UART_STDPORT_RX, EW32_DEVICE_UART_STDPORT_TX );
+#endif
 
-    /// setup i2c
-   ew32_device_i2c_setup(21, 22, 0, &__devman[0].device);
-   __ew32_devicemanager_add_device(0);
+#if EW32_DEVICE_USE_I2C == 1
+    ew32_device_i2c_setup(EW32_DEVICE_USE_I2C_PORT_SDA, EW32_DEVICE_USE_I2C_PORT_SCL, EW32_DEVICE_USE_I2C_PORT_NUM);
+#endif
 
-    /// setup powermanager
-    ew32_device_powermanager_setup(&__devman[1].device);
-   __ew32_devicemanager_add_device(1);
+#if EW32_DEVICE_USE_SIMPLE_POWERMANAGER == 1
+    ew32_device_powermanager_setup();
+#endif
 
-    // NULL device
-   ew32_device_virtualnull_setup(NULL, &__devman[2].device);
-    __ew32_devicemanager_add_device(2);
+#if EW32_DEVICE_USE_VNULL == 1
+    ew32_device_virtualnull_setup();
+#endif
 
-   ew32_dev_std_setup(EW32_STDOUT, &__devman[3].device);
-   __ew32_devicemanager_add_device(3);
+#if EW32_DEVICE_USE_STDDEVICE == 1
 
-    ew32_dev_std_setup(EW32_STDERR, &__devman[4].device);
-    __ew32_devicemanager_add_device(4);
-
-    ew32_dev_std_setup(EW32_STDIN, &__devman[5].device);
-    __ew32_devicemanager_add_device(5);
+    ew32_dev_std_setup(EW32_STDOUT, NULL);
+    ew32_dev_std_setup(EW32_STDERR, NULL);
+    ew32_dev_std_setup(EW32_STDIN, NULL);
+#endif
 
     return 0;
 }
@@ -100,7 +97,7 @@ uint8_t ew32_devicemanager_registdevice(ew32_dev_t* device, void* cfg, uint8_t p
 
     if(_id == -1) return EW32_DEVICEMANAGER_FULL;
 
-    xewLoggingDebug1("DEVM", "regist new device with id: %d\n", _id);
+    xewLoggingSerial(EW32_LOGGING_LEVEL_DEBUG, "DEVM", "regist new device %s with id: %d\n", device->subpath, _id);
     __devman[_id].device = device;
     __devman[_id].cfg = cfg;
     __devman[_id].probe_state = 0;
@@ -113,6 +110,14 @@ uint8_t ew32_devicemanager_registdevice(ew32_dev_t* device, void* cfg, uint8_t p
         if(_ret == EW32_DEVICE_NO_ERROR)   {
             __devman[_id].probe_state = EW32_DEVICEMANAGER_STATE_PROBE;
         }
+        else {
+#if EW32_DEVICE_USE_ERROR_VFS == EW32_YES
+            __devman[_id].device->id = ew32_vfsdb_regist_device(__devman[_id].device->subpath, 
+                                                      __devman[_id].device, 0);
+#endif
+
+            return _ret;
+        } 
     }
 
     if(__devm_global_state >= EW32_DEVICEMANAGER_STATE_SETUP || preInit == 1 ) {
@@ -120,13 +125,20 @@ uint8_t ew32_devicemanager_registdevice(ew32_dev_t* device, void* cfg, uint8_t p
         
         if(_ret == EW32_DEVICE_NO_ERROR)   { 
             __devman[_id].probe_state = EW32_DEVICEMANAGER_STATE_SETUP;
-        } 
+        } else {
+#if EW32_DEVICE_USE_ERROR_VFS == EW32_YES
+            __devman[_id].device->id = ew32_vfsdb_regist_device(__devman[_id].device->subpath, 
+                                                      __devman[_id].device, 0);
+#endif
+            return _ret;
+        }
     }
 
-    if(preInit == 1) {
+    if( __devm_global_state >= EW32_DEVICEMANAGER_STATE_RUNNING || preInit == 1) {
         __devman[_id].device->id = ew32_vfsdb_regist_device(__devman[_id].device->subpath, 
-                                                      __devman[_id].device, 
-                                                      _ret == EW32_DEVICE_NO_ERROR ? 1 : 0);
+                                                      __devman[_id].device, 1);
+
+        __devman[_id].probe_state = EW32_DEVICEMANAGER_STATE_RUNNING;
     }
     
 
@@ -141,6 +153,8 @@ uint8_t ew32_devicemanager_probeall() {
     uint16_t _error = 0;
 
     for(int i=0; i< EW32_DEVICE_MANAGER_DEVICES; i++) {
+        if(__devman[i].device == NULL) continue;
+
         if(__devman[i].probe_state == 0) {
             _devret = ew32_device_probe(__devman[i].device, __devman[i].cfg);
             if (_devret == 0) __devman[i].probe_state = EW32_DEVICEMANAGER_STATE_PROBE ;
@@ -164,17 +178,24 @@ uint8_t ew32_devicemanager_setup() {
     uint16_t _error = 0;
 
     for(int i=0; i< EW32_DEVICE_MANAGER_DEVICES; i++) {
+        if(__devman[i].device == NULL) continue;
+
         if(__devman[i].probe_state == EW32_DEVICEMANAGER_STATE_PROBE) {
             _devret = ew32_device_setup(__devman[i].device, __devman[i].cfg);
-            if (_devret == 0)  __devman[i].probe_state = EW32_DEVICEMANAGER_STATE_SETUP ;
-            else { 
+            if (_devret == 0) {
+                 __devman[i].probe_state = EW32_DEVICEMANAGER_STATE_SETUP ;
+
+                 __devman[i].device->id = ew32_vfsdb_regist_device(__devman[i].device->subpath, 
+                                                      __devman[i].device, 1);
+            } else { 
                 __devman[i].probe_state = _devret * -10; 
                 _error++; 
-            }
 
-            __devman[i].device->id = ew32_vfsdb_regist_device(__devman[i].device->subpath, 
-                                                      __devman[i].device, 
-                                                      _devret == EW32_DEVICE_NO_ERROR ? 1 : 0);
+#if EW32_DEVICE_USE_ERROR_VFS == EW32_YES
+                __devman[i].device->id = ew32_vfsdb_regist_device(__devman[i].device->subpath, 
+                                                      __devman[i].device, 0);
+#endif 
+            }
         }
     }
     return (_error == 0) ? 0 : 1;
@@ -185,6 +206,8 @@ uint8_t ew32_devicemanager_run() {
 
 
     for(int i=0; i< EW32_DEVICE_MANAGER_DEVICES; i++) {
+        if(__devman[i].device == NULL) continue;
+
         if(__devman[i].probe_state == EW32_DEVICEMANAGER_STATE_SETUP) {
 
             ew32_device_set_state(__devman[i].device, EW32_DEVICE_STATEID_POWERSTATE, 5);
@@ -199,6 +222,8 @@ uint8_t ew32_devicemanager_run() {
 void ew32_devicemanager_powerstate_set( uint8_t newState) {
 
     for(int i=0; i< EW32_DEVICE_MANAGER_DEVICES; i++) {
+        if(__devman[i].device == NULL) continue;
+
         if(__devman[i].probe_state == EW32_DEVICEMANAGER_STATE_RUNNING) {
             ew32_device_set_state(__devman[i].device, EW32_DEVICE_STATEID_POWERSTATE, newState);
         }
@@ -222,14 +247,16 @@ void ew32_devicemanager_dump(uint8_t level) {
     uint8_t _state = 0;
 
     for(int i=0; i< EW32_DEVICE_MANAGER_DEVICES; i++) {
-        if(__devman[i].probe_state == level) {
-            //_state =  (ew32_device_get_state != NULL) ? ew32_device_get_state(__devman[i].device, EW32_DEVICE_STATEID_POWERSTATE) : 5;
+        if(__devman[i].device == NULL) continue;
+
+        if(__devman[i].probe_state == level || level == EW32_DEVICEMANAGER_STATE_ALL) {
+          _state =  ew32_device_get_state(__devman[i].device, EW32_DEVICE_STATEID_POWERSTATE);
 
             xewLoggingSerial(EW32_LOGGING_LEVEL_DEBUG, "EW32_DEVM", "Device %d: /dev/%s, Probe State: %d, Power State: %d\n", 
                    i, 
                    __devman[i].device->subpath, 
                    __devman[i].probe_state, 
-                   5);
+                   5 );
         }
     }
 }
@@ -241,11 +268,13 @@ uint8_t ew32_devicemanager_setstate(const char* path, uint8_t state_id,uint8_t s
     return ew32_device_set_state(device, state_id, state);
 }
 
-uint8_t ewi32_devicemanager_setstate(ew32_devid_t id, uint8_t state_id, uint8_t state) {
+uint8_t ew32_devicemanager_setstate_by_id(ew32_devid_t id, uint8_t state_id, uint8_t state) {
     
    
     if(id == EW32_DEVICEMANAGER_ALL) {
         for(int i=0; i< EW32_DEVICE_MANAGER_DEVICES; i++) {
+            if(__devman[i].device == NULL) continue;
+            
             if(__devman[i].probe_state == EW32_DEVICEMANAGER_STATE_RUNNING) {
                 ew32_device_set_state(__devman[i].device, state_id, state);
             }
@@ -268,7 +297,7 @@ uint8_t ew32_devicemanager_getstate(const char* path, uint8_t state_id) {
     return ew32_device_get_state(device, state_id);
 }
 
-uint8_t ewi32_devicemanager_getstate(ew32_devid_t id, uint8_t state_id) {
+uint8_t ew32_devicemanager_getstate_by_id(ew32_devid_t id, uint8_t state_id) {
     if(id < 0 || id >= EW32_DEVICE_MANAGER_DEVICES) return EW32_DEVICE_ERROR_INVALID_ARG;
 
     if(__devman[id].probe_state == EW32_DEVICEMANAGER_STATE_RUNNING) {
@@ -279,38 +308,60 @@ uint8_t ewi32_devicemanager_getstate(ew32_devid_t id, uint8_t state_id) {
 
 #define EW32_IFBREAK(IF , VR,  RET) if(IF) { VR = RET; break; }
 
+static const char* ew32_match_and_strip(const char* path, const char* prefix, size_t len) {
+    if (path == NULL || prefix == NULL || len == 0) return NULL;
+    if (strncmp(path, prefix, len) != 0) return NULL;
+    if (path[len] != EW32_VFS_DELIMETER) return NULL;
+    if (path[len + 1] == '\0') return NULL;
+
+    return path + len + 1;
+}
+
 uint8_t ew32_devicemanager_get_device(const char* path, ew32_dev_t** device) {
     if (path == NULL || device == NULL) return EW32_DEVICE_ERROR_NULL;
 
     uint8_t _ret = EW32_DEVICE_ERROR_NOT_FOUND;
-    const size_t prefix_len = strlen(EW32_VFS_DEV_PATH);
-    char* _path = strdup(path); // Create a mutable copy of the path
+    const char* c_path = NULL;
 
-    while(1) {
-        EW32_IFBREAK(strncmp(_path, EW32_VFS_DEV_PATH, prefix_len) == 0, _ret, EW32_DEVICE_ERROR_INVALID_PATH);
-
-        EW32_IFBREAK(strncmp(_path, "/dev", prefix_len) == 0, _ret, EW32_DEVICE_ERROR_INVALID_PATH);
-        EW32_IFBREAK(strncmp(_path, "dev", prefix_len - 1) == 0, _ret, EW32_DEVICE_ERROR_INVALID_PATH);
-        EW32_IFBREAK(_path[prefix_len] != EW32_VFS_DELIMETER, _ret, EW32_DEVICE_ERROR_INVALID_PATH);
-    }
-
-    // Remove /dev/
-    char* c_path = _path + prefix_len + 1;
-
-    // Iterate through registered devices
-    for (uint32_t i = 0; i < EW32_DEVICE_MANAGER_DEVICES; i++)
-    {
-        if (strcmp(c_path, __devman[i].device->subpath) == 0)
-        {
-            *device = __devman[i].device;
-            _ret = 0; // Found
+    do {
+        /* /dev/<subpath> mit Fallback bei fehlerhaft gesetztem EW32_VFS_DEV_PATH */
+        c_path = ew32_match_and_strip(path, EW32_VFS_DEV_PATH, strlen(EW32_VFS_DEV_PATH));
+        if (c_path == NULL) {
+            c_path = ew32_match_and_strip(path, "/dev", 4);
         }
-    }
-    free(_path); // Free the allocated memory
+        if (c_path == NULL) {
+            c_path = ew32_match_and_strip(path, "dev", 3);
+        }
+
+#if EW32_DEVICE_USE_ERROR_VFS == EW32_CONFIG_YES
+        /* /sys/error/<subpath> mit Fallback bei fehlerhaft gesetztem EW32_VFS_SYS_PATH */
+        if (c_path == NULL) {
+            c_path = ew32_match_and_strip(path, EW32_VFS_SYS_PATH "/error", strlen(EW32_VFS_SYS_PATH "/error"));
+            if (c_path == NULL) {
+                c_path = ew32_match_and_strip(path, "/sys/error", 10);
+            }
+            if (c_path == NULL) {
+                c_path = ew32_match_and_strip(path, "sys/error", 9);
+            }
+        }
+#endif
+
+        EW32_IFBREAK(c_path == NULL, _ret, EW32_DEVICE_ERROR_INVALID_PATH);
+
+        for (uint32_t i = 0; i < EW32_DEVICE_MANAGER_DEVICES; i++) {
+            if (__devman[i].device == NULL) continue;
+
+            if (strcmp(c_path, __devman[i].device->subpath) == 0) {
+
+                *device = __devman[i].device;
+                _ret = EW32_DEVICE_NO_ERROR;
+                break;
+            }
+        }
+    } while (0);
 
     return _ret;
 }
-
 
 void ew32_devicemanager_loop(void* arg) {
     

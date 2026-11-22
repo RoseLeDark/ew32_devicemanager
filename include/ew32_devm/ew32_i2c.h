@@ -62,6 +62,7 @@ typedef struct es32_i2c_config {
     uint8_t address_set[128];   /**< Bitmap representing discovered 7-bit I2C addresses (0-127). */
     uint8_t hardware;           /**< Hardware flags or specific revision identifier. */
     void* apihandler;           /**< Underlying platform-specific driver handle (opaque pointer). */
+    uint8_t used;
 } ew32_i2c_cfg_t;
 
 /**
@@ -118,7 +119,7 @@ typedef struct ew32_i2c_registnewdev {
  * @return uint8_t EW32_DEVICE_NO_ERROR on success, or an error code on failure.
  */
 
-uint8_t ew32_device_i2c_setup(uint8_t sda, uint8_t scl, uint8_t port_num, ew32_dev_t** device);
+uint8_t ew32_device_i2c_setup(uint8_t sda, uint8_t scl, uint8_t port_num);
 uint8_t ew32_device_i2c_isadress(uint8_t port_num, uint8_t address);
 
 int32_t ew32_device_i2c_write(uint8_t port_num,  ew32_i2c_io_t* data, int32_t size);

@@ -21,6 +21,8 @@
 #include "ew32_devm/ew32_config.h"
 #include "ew32_devm/ew32_i2c.h"
 
+#include "ew32_base/osa/ew32_api.h"
+#include "ew32_devm/ew32_devm.h"
 
 #include "string.h"
 
@@ -36,22 +38,19 @@ extern uint8_t ew32_i2c_isadress(ew32_dev_t* device, uint8_t address);
 
 static ew32_dev_t __i2c_devices[EW32_DEVICE_I2C_MAX_DEVICES];     
 static ew32_i2c_cfg_t __global_cfg[EW32_DEVICE_I2C_MAX_DEVICES];
-static uint8_t __i2c_device_used[EW32_DEVICE_I2C_MAX_DEVICES];
 
 
-uint8_t ew32_device_i2c_setup(uint8_t sda, uint8_t scl, uint8_t port_num, ew32_dev_t** device) {
-    if(device == NULL) return EW32_DEVICE_ERROR_NULL;
+uint8_t ew32_device_i2c_setup(uint8_t sda, uint8_t scl, uint8_t port_num) {
     if(port_num >= EW32_DEVICE_I2C_MAX_DEVICES) return EW32_DEVICE_ERROR_INVALID_ARG;
-    if(__i2c_device_used[port_num] == 1) return EW32_DEVICE_ERROR_ALLREADY_INIT;
+    if( __global_cfg[port_num].used == 1) return EW32_DEVICE_ERROR_ALLREADY_INIT;
 
-    __i2c_device_used[port_num] = 1;
 
     
-    
+    __global_cfg[port_num].used = 1;
     __global_cfg[port_num].pin_scl = scl;
     __global_cfg[port_num].pin_sda = sda;
     __global_cfg[port_num].port_num = port_num;
-    __global_cfg[port_num].hardware = port_num > 2; // port 0 und 1 used hardware i2c
+    __global_cfg[port_num].hardware = port_num > EW32_HAL_I2C_HARDWARE_NUM; // port 0 und 1 used hardware i2c
 
     
     __i2c_devices[port_num].subpath[0] = 'b';
@@ -79,14 +78,14 @@ uint8_t ew32_device_i2c_setup(uint8_t sda, uint8_t scl, uint8_t port_num, ew32_d
 
     __i2c_devices[port_num].userdata = &__global_cfg[port_num];
 
-    *device = &__i2c_devices[port_num];
-    
+
+    ew32_devicemanager_registdevice(&__i2c_devices[port_num], NULL, 1);
 
     return EW32_DEVICE_NO_ERROR;
 }
 uint8_t ew32_device_i2c_isadress(uint8_t port_num, uint8_t address)  {
     if(port_num >= EW32_DEVICE_I2C_MAX_DEVICES) return EW32_DEVICE_ERROR_INVALID_ARG;
-    if(__i2c_device_used[port_num] != 1) return EW32_DEVICE_ERROR_NOT_USED; // not in use
+    if( __global_cfg[port_num].used != 1) return EW32_DEVICE_ERROR_NOT_USED; // not in use
 
 
     return ew32_i2c_isadress(&__i2c_devices[port_num], address);
@@ -95,14 +94,14 @@ uint8_t ew32_device_i2c_isadress(uint8_t port_num, uint8_t address)  {
 
 int32_t ew32_device_i2c_read(uint8_t port_num,  ew32_i2c_io_t* data, int32_t size) {
     if(port_num >= EW32_DEVICE_I2C_MAX_DEVICES) return EW32_DEVICE_ERROR_INVALID_ARG;
-    if(__i2c_device_used[port_num] != 1) return EW32_DEVICE_ERROR_NOT_USED; // not in use
+    if( __global_cfg[port_num].used != 1) return EW32_DEVICE_ERROR_NOT_USED; // not in use
 
     return ew32_i2c_read(&__i2c_devices[port_num], data, size);
 }
 
 int32_t ew32_device_i2c_write(uint8_t port_num,  ew32_i2c_io_t* data, int32_t size) {
     if(port_num >= EW32_DEVICE_I2C_MAX_DEVICES) return EW32_DEVICE_ERROR_INVALID_ARG;
-    if(__i2c_device_used[port_num] != 1) return EW32_DEVICE_ERROR_NOT_USED; // not in use
+    if( __global_cfg[port_num].used != 1) return EW32_DEVICE_ERROR_NOT_USED; // not in use
 
     return ew32_i2c_write(&__i2c_devices[port_num], data, size);
 }

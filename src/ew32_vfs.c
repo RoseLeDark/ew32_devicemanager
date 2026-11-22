@@ -123,7 +123,7 @@ uint8_t ew32_vfs_init()  {
 uint8_t __ew32_vfs_cheakother_exclusiv(ew32_file_t me) {
     uint8_t _ret = 0;
 
-    ew32_semaphore_lock(__ew32_excl_lock, EW32_INFINITY);
+    ew32_osa_smph_lock(__ew32_excl_lock, EW32_INFINITY);
 
     for(ew32_file_t i = 0; i < EW32_MAX_OPEN_FILES; i++) {
         if(i == me) continue;
@@ -186,7 +186,7 @@ uint8_t ew32_vfs_fopen(ew32_file_t* ctx, const char * path, int flags, int mode)
 
     int access_mode = flags & O_ACCMODE;
     
-    ew32_semaphore_lock(__ew32_create_lock, EW32_INFINITY);
+    ew32_osa_smph_lock(__ew32_create_lock, EW32_INFINITY);
     
     while (1)
     {   
@@ -268,12 +268,12 @@ uint8_t ew32_vfs_fclose(ew32_file_t* ctx) {
 
     ew32_file_t _fd = *ctx;
 
-    ew32_semaphore_lock(__ew32_create_lock, EW32_INFINITY);
+    ew32_osa_smph_lock(__ew32_create_lock, EW32_INFINITY);
     while (1)
     {
         if(__fd_table[_fd].state != 1) { _ret = EPROTO; break; }
 
-        ew32_semaphore_lock(__fd_table[_fd].lock, EW32_INFINITY);
+        ew32_osa_smph_lock(__fd_table[_fd].lock, EW32_INFINITY);
         __fd_table[_fd].open_count--;
         ew32_osa_smph_unlock(__fd_table[_fd].lock);
         

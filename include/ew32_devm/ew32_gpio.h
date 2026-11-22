@@ -37,7 +37,7 @@ extern "C" {
 
 
 
-uint8_t ew32_device_gpio_setup(ew32_dev_t* parent, ew32_dev_t** device);
+uint8_t ew32_device_gpio_setup();
 
 uint8_t ew32_device_gpio_can_used_pin(uint16_t pin);
 uint8_t ew32_device_gpio_marked_pin(uint16_t pin, uint8_t mode, uint16_t dev);

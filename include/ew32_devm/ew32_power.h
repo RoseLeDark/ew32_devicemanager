@@ -54,7 +54,7 @@ typedef struct ew32_powermanager_io {
     uint8_t state;
 } ew32_powermanager_io_t;
 
-uint8_t ew32_device_powermanager_setup(ew32_dev_t** device);
+uint8_t ew32_device_powermanager_setup();
 
 void ew32_device_powermanager_sethandle(ew32_powermanager_handle test, ew32_powermanager_prechange prechange);
 
