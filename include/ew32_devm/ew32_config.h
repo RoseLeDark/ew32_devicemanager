@@ -41,6 +41,22 @@
     #define EW32_DEVICE_USE_I2C                 EW32_CONFIG_YES
 #endif   
 
+#ifndef EW32_DEVICE_USE_UART  
+    #define EW32_DEVICE_USE_UART                EW32_CONFIG_YES
+#endif   
+
+#ifndef EW32_DEVICE_USE_SIMPLE_POWERMANAGER
+    #define EW32_DEVICE_USE_SIMPLE_POWERMANAGER EW32_CONFIG_YES 
+#endif
+
+#ifndef EW32_DEVICE_USE_VNULL
+    #define EW32_DEVICE_USE_VNULL               EW32_CONFIG_YES 
+#endif
+
+#ifndef EW32_DEVICE_USE_STDDEVICE
+    #define EW32_DEVICE_USE_STDDEVICE           EW32_CONFIG_YES 
+#endif
+
 /** @brief Enable or disable SPI bus subsystem support. */
 #ifndef EW32_DEVICE_USE_SPI   
     #define EW32_DEVICE_USE_SPI                 EW32_CONFIG_YES
@@ -83,6 +99,40 @@
     #ifndef EW32_DEVICE_USE_I2C_AUTOPROBE
         #define EW32_DEVICE_USE_I2C_AUTOPROBE   EW32_CONFIG_YES
     #endif 
+
+    #ifndef EW32_DEVICE_USE_I2C_PORT_SDA
+        #define EW32_DEVICE_USE_I2C_PORT_SDA   21
+    #endif 
+
+    #ifndef EW32_DEVICE_USE_I2C_PORT_SCL
+        #define EW32_DEVICE_USE_I2C_PORT_SCL   22
+    #endif 
+
+    #ifndef EW32_DEVICE_USE_I2C_PORT_NUM
+        #define EW32_DEVICE_USE_I2C_PORT_NUM   0
+    #endif
+#endif
+
+#if EW32_DEVICE_USE_UART == EW32_CONFIG_YES
+    #ifndef EW32_DEVICE_UART_STDPORT 
+        #define EW32_DEVICE_UART_STDPORT 0
+    #endif
+
+    #ifndef EW32_DEVICE_UART_STDPORT_RX 
+        #define EW32_DEVICE_UART_STDPORT_RX -1
+    #endif
+
+    #ifndef EW32_DEVICE_UART_STDPORT_TX 
+        #define EW32_DEVICE_UART_STDPORT_TX -1
+    #endif
+
+    #ifndef EW32_DEVICE_UART_STDPORT_BAUD 
+        #define EW32_DEVICE_UART_STDPORT_BAUD 115200
+    #endif
+#endif
+
+#ifndef EW32_DEVICE_USE_ERROR_VFS 
+#define EW32_DEVICE_USE_ERROR_VFS               EW32_CONFIG_NO
 #endif
 
 #if EW32_DEVICE_MANAGER_MODE == EW32_STATIC
