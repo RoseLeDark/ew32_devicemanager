@@ -21,6 +21,9 @@
 #include "ew32_devm/ew32_std.h"
 
 #include "ew32_devm/ew32_config.h"
+
+#if EW32_DEVICE_USE_STDDEVICE == EW32_CONFIG_YES
+
 #include "ew32_devm/ew32_std.h"
 #include <ew32_base/ew32_logging.h>
 #include <stddef.h>
@@ -149,3 +152,5 @@ uint8_t ew32_dev_std_setup(const uint8_t id, ew32_dev_t** device) {
     //*device = &DEVICE[id];
     return ew32_devicemanager_registdevice(&DEVICE[id], NULL, 1);
 }
+
+#endif

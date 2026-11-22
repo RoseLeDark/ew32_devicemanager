@@ -26,7 +26,7 @@
 
 #include "string.h"
 
-#if EW32_DEVICE_USE_I2C == 1
+#if EW32_DEVICE_USE_I2C == EW32_CONFIG_YES
 
 extern uint8_t ew32_i2c_probe(ew32_dev_t* device, void* cfg);
 extern uint8_t ew32_i2c_setup(ew32_dev_t* device, void* cfg);

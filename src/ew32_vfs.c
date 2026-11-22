@@ -229,7 +229,7 @@ uint8_t ew32_vfs_fopen(ew32_file_t* ctx, const char * path, int flags, int mode)
 
 
 
-ssize_t ew32_vfs_fread (ew32_file_t* ctx, void * dst, size_t size) {
+int32_t ew32_vfs_fread (ew32_file_t* ctx, void * dst, uint32_t size) {
     if(ctx == 0) return -EIO;
 
     uint8_t _ret = 0;
@@ -246,7 +246,7 @@ ssize_t ew32_vfs_fread (ew32_file_t* ctx, void * dst, size_t size) {
     
 }
 
-ssize_t ew32_vfs_fwrite (ew32_file_t* ctx, void * dst, size_t size) {
+int32_t ew32_vfs_fwrite (ew32_file_t* ctx, void * dst, uint32_t size) {
     if(ctx == 0) return -EIO;
 
     uint8_t _ret = 0;
@@ -259,7 +259,7 @@ ssize_t ew32_vfs_fwrite (ew32_file_t* ctx, void * dst, size_t size) {
 
     return _ret;
 }
-off_t ew32_vfs_fseek(ew32_file_t* ctx, off_t size, int mode) {
+long ew32_vfs_fseek(ew32_file_t* ctx, long size, int mode) {
     return -ENOSYS;
 }
 uint8_t ew32_vfs_fclose(ew32_file_t* ctx) {

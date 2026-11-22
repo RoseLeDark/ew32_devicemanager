@@ -52,6 +52,8 @@ typedef struct ew32_uart
  */
 uint8_t ew32_device_uart_setup_ex(uint8_t port_num, unsigned long baud, uint32_t config, int8_t rx, int8_t tx);
 
+int32_t ew32_device_uart_send(uint8_t port_num, const char* buf, uint32_t size);
+
 #define ew32_device_uart_setup(port_num, baud, config) ew32_device_uart_setup_ex(port_num, baud, config, -1, -1)
 
 #ifdef __cplusplus

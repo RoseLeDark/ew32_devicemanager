@@ -23,6 +23,8 @@
 
 #include "ew32_device.h"
 
+#define EW32_DEVM_SUPPORT_GPIO 1
+
 #define EW32_DEVICE_GPIO_USED_I2C           0
 #define EW32_DEVICE_GPIO_USED_UART          1
 #define EW32_DEVICE_GPIO_USED_PIN           2

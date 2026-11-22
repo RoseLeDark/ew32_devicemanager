@@ -24,8 +24,13 @@
 #include "ew32_config.h"
 #include "ew32_device.h"
 #include "ew32_api.h"
-
 #include <stdio.h>
+
+#if EW32_DEVICE_USE_STDDEVICE == EW32_CONFIG_YES
+#define EW32_DEVM_SUPPORT_STDOUT 1
+#define EW32_DEVM_SUPPORT_STDERR 1
+#define EW32_DEVM_SUPPORT_STDIN 1
+#endif
 
 #define EW32_STDOUT  0
 #define EW32_STDERR  1

@@ -25,7 +25,8 @@
 
 #include <stdio.h>
 
-#if EW32_DEVICE_USE_I2C == 1
+#if EW32_DEVICE_USE_I2C == EW32_CONFIG_YES
+#define EW32_DEVM_SUPPORT_I2C 1
 
 /** @name I2C Bus Event Messages */
 /// @{

@@ -19,6 +19,9 @@
  */
 
 #include "ew32_devm/ew32_config.h"
+
+#if EW32_DEVICE_USE_VNULL == EW32_CONFIG_YES
+
 #include "ew32_devm/ew32_nulldev.h"
 #include <ew32_base/ew32_logging.h>
 #include <stddef.h>
@@ -80,3 +83,5 @@ uint8_t ew32_device_virtualnull_setup(ew32_dev_t* parent, ew32_dev_t** device) {
     //*device = &__global_device;
     return ew32_devicemanager_registdevice(&__global_device, NULL, 1);
 }
+
+#endif

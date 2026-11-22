@@ -23,6 +23,8 @@
 
 #include "ew32_device.h"
 
+#define EW32_DEVM_VIRTUAL_NULLDEV 1
+
 #ifdef __cplusplus
 extern "C" {
 #endif

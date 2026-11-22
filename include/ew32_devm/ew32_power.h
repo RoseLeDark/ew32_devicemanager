@@ -26,6 +26,9 @@
 #include "ew32_api.h"
 
 #include <stdio.h>
+#if EW32_DEVICE_USE_SIMPLE_POWERMANAGER == EW32_CONFIG_YES
+#define EW32_DEVM_SUPPORT_SIMPLE_POWERMANAGER 1
+#endif
 
 #define EW32_POWERSTATE_L1                  1 // deep sleep
 #define EW32_POWERSTATE_L2                  2

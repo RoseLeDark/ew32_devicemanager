@@ -19,6 +19,9 @@
  */
 
 #include "ew32_devm/ew32_config.h"
+
+#if EW32_DEVICE_USE_SIMPLE_POWERMANAGER == EW32_CONFIG_YES
+
 #include "ew32_devm/ew32_power.h"
 #include <ew32_base/ew32_logging.h>
 #include <ew32_devm/ew32_devm.h>
@@ -179,3 +182,5 @@ uint8_t ew32_device_powermanager_setup(ew32_dev_t** device){
 
     return ew32_devicemanager_registdevice(&DEVICE, NULL, 1);
 }
+
+#endif

@@ -19,6 +19,9 @@
  */
 
 #include "ew32_devm/ew32_config.h"
+
+#if EW32_DEVICE_USE_UART == EW32_CONFIG_YES
+
 #include "ew32_devm/ew32_uart.h"
 #include <ew32_base/ew32_logging.h>
 #include <stddef.h>
@@ -109,3 +112,9 @@ uint8_t ew32_device_uart_setup_ex(uint8_t port_num, unsigned long baud, uint32_t
     return ew32_devicemanager_registdevice( &DEVICE[port_num], NULL, 1);
 
 }
+
+int32_t ew32_device_uart_send(uint8_t port_num, const char* buf, uint32_t size) {
+    return ew32_api_uart_write(port_num, buf, size);
+    
+}
+#endif

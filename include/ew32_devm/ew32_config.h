@@ -170,5 +170,10 @@
    typedef int8_t ew32_devid_t;
 #endif
 
+#define EW32_DEVM_VERSION_MAYOR     0
+#define EW32_DEVM_VERSION_MINOR     3
+#define EW32_DEVM_VERSION_SUB       0
 
+#define EW32_DEVM_VERSION_STRING    "0.3.0"
+#define EW32_DEVM_VERSION           0x000300
 
