@@ -20,7 +20,7 @@
   "frameworks": "arduino",
   "platforms": "*",
   "dependencies":  {
-    "pba3h11aso/ew32_base": "0.4.3"
+    
   },
   "examples": [
       {

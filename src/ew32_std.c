@@ -45,10 +45,9 @@ uint8_t ew32_std_setup(ew32_dev_t* device, void* cfg) {
     return 0;
 }
 
-int32_t ew32_std_write(ew32_dev_t* device, void* data, int32_t size) {
+int32_t ew32_std_write(ew32_dev_t* device, const void* data, const  int32_t size) {
     if (device == NULL || data == NULL || size <= 0) return -1;
 
-    char* __inf = (char*)data;
     int _user = device->raw_userdata;
     ew32_dev_t *parent = device->parent;
     int32_t _ret = size;
@@ -67,14 +66,13 @@ int32_t ew32_std_write(ew32_dev_t* device, void* data, int32_t size) {
         }
     }
 
-    return size;
+    return _ret;
 }
-int32_t ew32_std_read(ew32_dev_t* device, void* data, int32_t size) {
+int32_t ew32_std_read(ew32_dev_t* device, void* data, const int32_t size) {
     if (device == NULL || data == NULL || size <= 0) return -1;
 
     int _user = device->raw_userdata;
     ew32_dev_t *parent = device->parent;
-    int32_t _ret = size;
 
     if (_user != EW32_STDIN) return 0;
 
@@ -90,6 +88,7 @@ int32_t ew32_std_read(ew32_dev_t* device, void* data, int32_t size) {
         if (_c == EOF) break;
         _buf[_i++] = (char)_c;
     }
+  
 
     return _i;
 }

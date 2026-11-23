@@ -64,6 +64,7 @@ typedef struct es32_i2c_config {
     uint8_t hardware;           /**< Hardware flags or specific revision identifier. */
     void* apihandler;           /**< Underlying platform-specific driver handle (opaque pointer). */
     uint8_t used;
+    uint8_t powerstate;
 } ew32_i2c_cfg_t;
 
 /**

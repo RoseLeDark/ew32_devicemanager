@@ -289,5 +289,5 @@ uint8_t ew32_vfs_fclose(ew32_file_t* ctx) {
     }
     ew32_osa_smph_unlock(__ew32_create_lock);
 
-    return 0;
+    return _ret;
 }

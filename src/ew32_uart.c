@@ -26,45 +26,17 @@
 #include <ew32_base/ew32_logging.h>
 #include <stddef.h>
 #include <string.h>
-#include "ew32_base/osa/ew32_api.h"
+#include "ew32_base/osa/ew32_osa_api.h"
 #include <stdlib.h>
 #include "ew32_devm/ew32_devm.h"
+#include "ew32_devm/API/ew32_hal_uart.h"
 
 #define DEVICE __global_ew32_uart_device__
 
-extern uint8_t ew32_api_uart_setup(ew32_uart_cfg_t* config) ;
-extern uint32_t ew32_api_uart_write(uint32_t portnum, const uint8_t* buf, uint32_t size);
-extern uint32_t ew32_api_uart_read(uint32_t portnum, uint8_t* buf, uint32_t size);
 
-extern uint32_t ew32_api_uart_avaible(uint32_t portnum);
 
-uint8_t ew32_uart_probe(ew32_dev_t* device, void* cfg) {
 
-    return 0;
-}
-uint8_t ew32_uart_setup(ew32_dev_t* device, void* cfg) {
-  
-    ew32_uart_cfg_t* _cfg = (ew32_uart_cfg_t*)device->userdata;
-    return ew32_api_uart_setup(_cfg);
-}
 
-int32_t ew32_uart_write(ew32_dev_t* device, void* data, int32_t size) {
-  
-    ew32_uart_cfg_t* _cfg = (ew32_uart_cfg_t*)device->userdata;
-    return ew32_api_uart_write(_cfg->port_num, data, size);
-}
-int32_t ew32_uart_read(ew32_dev_t* device, void* data, int32_t size) {
-   
-    ew32_uart_cfg_t* _cfg = (ew32_uart_cfg_t*)device->userdata;
-
-    int32_t _used = ew32_api_uart_avaible(_cfg->port_num);
-    _used = _used > size ? size : _used;
-
-    if(_used ) {
-        return ew32_api_uart_read(_cfg->port_num, data, _used);
-    }
-    return 0;
-}
 
 ew32_dev_t DEVICE[EW32_HAL_UART_HARDWARE_NUM];
 ew32_uart_cfg_t DEVICE_state[EW32_HAL_UART_HARDWARE_NUM];
@@ -101,10 +73,10 @@ uint8_t ew32_device_uart_setup_ex(uint8_t port_num, unsigned long baud, uint32_t
     DEVICE[port_num].rw =  EW32_DEVICE_READ_WRITE;
     DEVICE[port_num].set_state = 0;
     DEVICE[port_num].get_state = 0;
-    DEVICE[port_num].probe = ew32_uart_probe;
-    DEVICE[port_num].setup = ew32_uart_setup;
-    DEVICE[port_num].write = ew32_uart_write;
-    DEVICE[port_num].read = ew32_uart_read;
+    DEVICE[port_num].probe = ew32_hal_uart_probe;
+    DEVICE[port_num].setup = ew32_hal_uart_setup;
+    DEVICE[port_num].write = ew32_hal_uart_write;
+    DEVICE[port_num].read = ew32_hal_uart_read;
     DEVICE[port_num].on_run = NULL;
     DEVICE[port_num].userdata = &DEVICE_state[port_num];
     DEVICE[port_num].parent = NULL;
@@ -113,8 +85,8 @@ uint8_t ew32_device_uart_setup_ex(uint8_t port_num, unsigned long baud, uint32_t
 
 }
 
-int32_t ew32_device_uart_send(uint8_t port_num, const char* buf, uint32_t size) {
-    return ew32_api_uart_write(port_num, buf, size);
+int32_t ew32_device_uart_send(uint8_t port_num, const char* buf,const  uint32_t size) {
+    return ew32_api_uart_write(port_num, (uint8_t*)buf, size);
     
 }
 #endif

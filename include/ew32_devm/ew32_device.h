@@ -34,13 +34,9 @@
 #define ES32_DEVICE_CLASS_PROTOCOL  0x08 /**< Protocol handler or communication protocol device class. */
 #define ES32_DEVICE_CLASS_GPIO      0x09 /**< General-purpose input/output device class. */
 #define ES32_DEVICE_CLASS_SENSOR    0x0A /**< Sensor or measurement device class.
-
 /// @}
 
-/** @name Device Types */
-/// @{
-/** @name Device Types */
-/// @{
+
 #define EW32_DEVICE_TYPE_UNKNOWN                 0x0000 / **< Unknown or unspecified device type. */
 #define EW32_DEVICE_TYPE_I2C                     0x0001 /**< I2C bus controller or device type. */
 #define EW32_DEVICE_TYPE_SPI                     0x0002 /**< SPI bus controller or device type. */
@@ -87,8 +83,6 @@
 #define EW32_DEVICE_TYPE_PMEM                    0x002B /**< Persistent memory or non-volatile memory device type. */
 #define EW32_DEVICE_TYPE_HARDWARE_ACCELERATOR    0x002C /**< Hardware accelerator or co-processor device type. */
 
-
-/* --- Embedded & Robotik Sensoren / Aktoren --- */
 #define EW32_DEVICE_TYPE_GPS                     0x002D /**< GPS sensor or navigation device type. */
 #define EW32_DEVICE_TYPE_LIGHT_SENSOR            0x002E /**< Light sensor or ambient light measurement device type. */
 #define EW32_DEVICE_TYPE_TEMP_SENSOR             0x002F /**< Temperature sensor or thermal measurement device type. */
@@ -105,7 +99,7 @@
  
 #define EW32_DEVICE_TYPE_USER                    0x1000 /**< User-defined or custom device type. */
 #define EW32_DEVICE_TYPE_MAX                     0x1FFF /**< Maximum valid device type value. */
-/// @}
+
 
 
 #define EW32_DEVICE_READ_ONLY                    0x01 /**< Device is read-only; write operations are not permitted. */
@@ -141,8 +135,8 @@ typedef struct EW32_PACKED ew32device  {
 
     uint8_t (* probe)(struct ew32device* device, void* cfg);         /**< Function pointer for discovering hardware capabilities. */
     uint8_t (* setup)(struct ew32device* device, void* cfg);         /**< Function pointer for initializing the device. */
-    int32_t (* write)(struct ew32device* device, void* data, int32_t size);   /**< Function pointer for writing data or control messages. */
-    int32_t (* read)(struct ew32device* device, void* data, int32_t size);    /**< Function pointer for reading data from the device. */
+    int32_t (* write)(struct ew32device* device, const void* data, const int32_t size);   /**< Function pointer for writing data or control messages. */
+    int32_t (* read)(struct ew32device* device, void* data, const int32_t size);    /**< Function pointer for reading data from the device. */
 
     uint8_t (* get_state)(struct ew32device* device, uint8_t state_id);
     uint8_t (* set_state)(struct ew32device* device, uint8_t state_id, uint8_t state);
@@ -168,7 +162,7 @@ typedef struct EW32_PACKED ew32device  {
  * @param size Size of the payload data in bytes.
  * @return int32_t Number of bytes written, or a negative error code on failure.
  */
-int32_t ew32_device_send(ew32_dev_t* device, void* data, int32_t size);
+int32_t ew32_device_send(ew32_dev_t* device, const void* data, const int32_t size);
 
 /**
  * @brief Reads data from a device.
@@ -178,7 +172,7 @@ int32_t ew32_device_send(ew32_dev_t* device, void* data, int32_t size);
  * @param size Maximum number of bytes to read.
  * @return int32_t Number of bytes read, or a negative error code on failure.
  */
-int32_t ew32_device_read(ew32_dev_t* device, void* data, int32_t size);
+int32_t ew32_device_read(ew32_dev_t* device, void* data, const int32_t size);
 
 /**
  * @brief Sets or queries the power state of a device. Obsolet please use ew32_device_set_state(device, EW32_DEVICE_STATEID_POWERSTATE, state)
@@ -265,7 +259,7 @@ uint8_t ew32_device_set_parent(ew32_dev_t* device, ew32_dev_t* parent);
  * @param device Pointer to the target device node.
  * @return uint8_t The current operational state.
  */
-uint8_t ew32_device_get_state(ew32_dev_t* device, uint8_t state_id);
+int8_t ew32_device_get_state(ew32_dev_t* device, uint8_t state_id);
 /**
  * @brief Sets the operational state of a device (e.g., suspend, resume).
  * 
@@ -273,7 +267,7 @@ uint8_t ew32_device_get_state(ew32_dev_t* device, uint8_t state_id);
  * @param state The desired operational state.
  * @return uint8_t EW32_DEVICE_NO_ERROR on success.
  */
-uint8_t ew32_device_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state);
+int8_t ew32_device_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state);
 
 #ifdef __cplusplus
 }

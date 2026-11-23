@@ -27,18 +27,7 @@
 extern "C" {
 #endif
 
-typedef struct ew32_uart
-{
-    uint8_t port_num;
-    unsigned long  baud;
-    uint32_t config;
-    int8_t rxPin;  // -1
-    int8_t txPin;  // -1
-    ew32_bool_t invert;  // false
-    unsigned long timeout_ms; // 20000UL
-    uint8_t rxfifo_full_thrhd; // 112
-    uint8_t used ;
-} ew32_uart_cfg_t;
+
 
 /**
  * @brief Initializes and assigns a virtual null fallback device node.

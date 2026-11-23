@@ -1,41 +1,57 @@
 
-#include "ew32_devm/devmanager.h"
 
 /* Ausgabe with buildflag: -DEW32_PLATFORM=1 -DEW32_DEBUG=1 on esp32-S1
-[0:DEVM] regist new device bus/i2c0 with id: 1
-[1:bus/i2c0] Found device 0x19
-[1:bus/i2c0] Found device 0x29
-[1:bus/i2c0] Found device 0x60
-[1:bus/i2c0] Found device 0x70
-[1:bus/i2c0] Found device 0x77
-[0:/dev/gpio] marked pin 21 as used
-[0:/dev/gpio] marked pin 22 as used
-[0:DEVM] regist new device bus/pmn0 with id: 2
-[0:DEVM] regist new device null with id: 3
-[0:/dev/null] ew32_nulldev_probe
-[0:/dev/null] ew32_nulldev_setup
-[0:DEVM] regist new device stdout with id: 4
-[0:DEVM] regist new device stderr with id: 5
-[0:DEVM] regist new device stdin with id: 6
-[0:MAIN] Device Manager Create ... [OK]
-[0:MAIN] Device Manager run ... [OK]
-[0:EW32_DEVM] Device 0: /dev/bus/uart0, Probe State: 4, Power State: 5
-[0:EW32_DEVM] Device 1: /dev/bus/i2c0, Probe State: 4, Power State: 5
-[0:EW32_DEVM] Device 2: /dev/bus/pmn0, Probe State: 4, Power State: 5
-[0:/dev/null] ew32_nulldev_get_state
-[0:EW32_DEVM] Device 3: /dev/null, Probe State: 4, Power State: 5
-[0:EW32_DEVM] Device 4: /dev/stdout, Probe State: 4, Power State: 5
-[0:EW32_DEVM] Device 5: /dev/stderr, Probe State: 4, Power State: 5
-[0:EW32_DEVM] Device 6: /dev/stdin, Probe State: 4, Power State: 5
-[0:bus/pmn0] set mode state to: 2
-[0:/dev/null] ew32_nulldev_set_state
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:4640
+load:0x40078000,len:15632
+load:0x40080400,len:3164
+entry 0x4008059c
+
+[Debug:DEVM] regist new device bus/i2c0 with id: 1
+[Info:bus/i2c0] Found device 0x19
+[Info:bus/i2c0] Found device 0x29
+[Info:bus/i2c0] Found device 0x77
+[Debug:/dev/gpio] marked pin 21 as used
+[Debug:/dev/gpio] marked pin 22 as used
+[Debug:DEVM] regist new device bus/pmn0 with id: 2
+[Debug:DEVM] regist new device null with id: 3
+[Debug:/dev/null] ew32_nulldev_probe
+[Debug:/dev/null] ew32_nulldev_setup
+[Debug:DEVM] regist new device stdout with id: 4
+[Debug:DEVM] regist new device stderr with id: 5
+[Debug:DEVM] regist new device stdin with id: 6
+[Debug:MAIN] Device Manager Create ... [OK]
+[Debug:MAIN] Device Manager run ... [OK]
+[Debug:EW32_DEVM] Device 0: /dev/bus/uart0, Probe State: 4, Power State: not support
+[Debug:EW32_DEVM] Device 1: /dev/bus/i2c0, Probe State: 4, Power State: 5
+[Debug:EW32_DEVM] Device 2: /dev/bus/pmn0, Probe State: 4, Power State: 5
+[Debug:EW32_DEVM] Device 3: /dev/null, Probe State: 4, Power State: 5
+[Debug:EW32_DEVM] Device 4: /dev/stdout, Probe State: 4, Power State: not support
+[Debug:EW32_DEVM] Device 5: /dev/stderr, Probe State: 4, Power State: not support
+[Debug:EW32_DEVM] Device 6: /dev/stdin, Probe State: 4, Power State: not support
+[Debug:bus/pmn0] set mode state to: 2
+[Debug:/dev/null] ew32_nulldev_set_state
 */
+
+#include "ew32_devm/devmanager.h"
+
+char* xewLoggingLevelToString(uint8_t level) {
+    if(level == EW32_LOGGING_LEVEL_DEBUG )   { return "Debug"; }
+    if(level == EW32_LOGGING_LEVEL_INFO )   { return "Info"; }     
+    if(level == EW32_LOGGING_LEVEL_WARNING )   { return "Warn"; }
+    if(level == EW32_LOGGING_LEVEL_ERROR )   { return "Error"; }
+    return "Critical"; 
+}
+
 int8_t __logging_handler(uint8_t level, const char* tag, const char* text) {
 
 #if EW32_DEVICE_USE_UART == EW32_CONFIG_YES
     char buf[256];
 
-    sprintf(buf, "[%d:%s] %s", level, tag, text);
+    sprintf(buf, "[%s:%s] %s", xewLoggingLevelToString(level), tag, text);
     ew32_device_uart_send(EW32_DEVICE_UART_STDPORT, buf, strlen(buf));
 #endif
 

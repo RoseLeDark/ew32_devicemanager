@@ -38,6 +38,8 @@ uint8_t ew32_nulldev_setup(ew32_dev_t* device, void* cfg) {
     return 0;
 }
 uint8_t ew32_nulldev_get_state(ew32_dev_t* device, uint8_t state) {
+    if (state == EW32_DEVICE_STATEID_POWERSTATE)  return 5;
+
     xewLoggingDebug("/dev/null", "ew32_nulldev_get_state\n");
     return 0;
 }
@@ -46,12 +48,12 @@ uint8_t ew32_nulldev_set_state(ew32_dev_t* device, uint8_t stateid, uint8_t stat
     xewLoggingDebug("/dev/null", "ew32_nulldev_set_state\n");
     return 0;
 }
-int32_t ew32_nulldev_write(ew32_dev_t* device, void* data, int32_t size) {
+int32_t ew32_nulldev_write(ew32_dev_t* device, const  void*, const  int32_t) {
     xewLoggingDebug("/dev/null", "ew32_nulldev_write\n");
-    memset(data, 0, size);
+  
     return 0;
 }
-int32_t ew32_nulldev_read(ew32_dev_t* device, void* data, int32_t size) {
+int32_t ew32_nulldev_read(ew32_dev_t* device, void* data, const int32_t size) {
     xewLoggingDebug("/dev/null", "ew32_nulldev_read\n");
     memset(data, 0, size);
     return 0;

@@ -22,27 +22,15 @@
 #pragma once
 
 #include "ew32_device.h"
-
-#define EW32_DEVM_SUPPORT_GPIO 1
-
-#define EW32_DEVICE_GPIO_USED_I2C           0
-#define EW32_DEVICE_GPIO_USED_UART          1
-#define EW32_DEVICE_GPIO_USED_PIN           2
-#define EW32_DEVICE_GPIO_USED_I2S           3
-#define EW32_DEVICE_GPIO_USED_SPI           4
-#define EW32_DEVICE_GPIO_USED_TOUCH         5
-#define EW32_DEVICE_GPIO_USED_USER          6
+#include "API/ew32_hal_gpio.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
+uint8_t ew32_hal_gpio_setup();
 
-uint8_t ew32_device_gpio_setup();
-
-uint8_t ew32_device_gpio_can_used_pin(uint16_t pin);
-uint8_t ew32_device_gpio_marked_pin(uint16_t pin, uint8_t mode, uint16_t dev);
 
 #ifdef __cplusplus
 }

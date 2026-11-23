@@ -24,7 +24,7 @@
 #include <ew32_base/ew32_logging.h>
 #include "ew32_devm/ew32_api.h"
 
-int32_t ew32_device_send(ew32_dev_t* device, void* data, int32_t size) {
+int32_t ew32_device_send(ew32_dev_t* device, const void* data, const  int32_t size) {
     if(device == NULL) return -EW32_DEVICE_ERROR_NULL;
 
     ew32_dev_t *_used_device = (device->parent != NULL) ? device->parent : device;
@@ -50,7 +50,7 @@ int32_t ew32_device_send(ew32_dev_t* device, void* data, int32_t size) {
 
     return datasended;
 }
-int32_t ew32_device_read(ew32_dev_t* device, void* data, int32_t size) {
+int32_t ew32_device_read(ew32_dev_t* device, void* data, const int32_t size) {
     if(device == NULL) return -EW32_DEVICE_ERROR_NULL;
 
     ew32_dev_t *_used_device = (device->parent != NULL) ? device->parent : device;
@@ -161,17 +161,19 @@ uint8_t ew32_device_set_parent(ew32_dev_t* device, ew32_dev_t* parent) {
 
     return EW32_DEVICE_NO_ERROR;
 }
-uint8_t ew32_device_get_state(ew32_dev_t* device, uint8_t state_id) {
+int8_t ew32_device_get_state(ew32_dev_t* device, uint8_t state_id) {
     if(device == NULL) return -EW32_DEVICE_ERROR_NULL;
-    return (device->get_state != NULL) ? device->get_state(device, state_id) : 10;
+    return (device->get_state != NULL) ? device->get_state(device, state_id) : -1;
 
 }
 
-uint8_t ew32_device_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state) {
-    if(device == NULL) return EW32_DEVICE_ERROR_NULL;
+int8_t ew32_device_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state) {
+    if(device == NULL) return -EW32_DEVICE_ERROR_NULL;
     
-    if(device->set_state != NULL)
+    if(device->set_state != NULL) {
         device->set_state(device, state_id, state);
+        return 0;
+    }
 
-    return EW32_DEVICE_NO_ERROR;
+    return -1;
 }

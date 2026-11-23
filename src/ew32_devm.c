@@ -244,7 +244,7 @@ uint16_t ew32_devicemanager_get_running() {
 
 
 void ew32_devicemanager_dump(uint8_t level) {
-    uint8_t _state = 0;
+    int8_t _state = 0;
 
     for(int i=0; i< EW32_DEVICE_MANAGER_DEVICES; i++) {
         if(__devman[i].device == NULL) continue;
@@ -252,11 +252,18 @@ void ew32_devicemanager_dump(uint8_t level) {
         if(__devman[i].probe_state == level || level == EW32_DEVICEMANAGER_STATE_ALL) {
           _state =  ew32_device_get_state(__devman[i].device, EW32_DEVICE_STATEID_POWERSTATE);
 
-            xewLoggingSerial(EW32_LOGGING_LEVEL_DEBUG, "EW32_DEVM", "Device %d: /dev/%s, Probe State: %d, Power State: %d\n", 
-                   i, 
-                   __devman[i].device->subpath, 
-                   __devman[i].probe_state, 
-                   5 );
+            if(_state != -1) {
+                xewLoggingSerial(EW32_LOGGING_LEVEL_DEBUG, "EW32_DEVM", "Device %d: /dev/%s, Probe State: %d, Power State: %d\n", 
+                    i, 
+                    __devman[i].device->subpath, 
+                    __devman[i].probe_state, 
+                    _state  );
+            } else {
+                xewLoggingSerial(EW32_LOGGING_LEVEL_DEBUG, "EW32_DEVM", "Device %d: /dev/%s, Probe State: %d, Power State: not support\n", 
+                    i, 
+                    __devman[i].device->subpath, 
+                    __devman[i].probe_state);
+            }
         }
     }
 }
@@ -286,7 +293,7 @@ uint8_t ew32_devicemanager_setstate_by_id(ew32_devid_t id, uint8_t state_id, uin
             ew32_device_set_state(__devman[id].device, state_id, state);
         }
     }
-    
+    return 0;
 }
 
 uint8_t ew32_devicemanager_getstate(const char* path, uint8_t state_id) {

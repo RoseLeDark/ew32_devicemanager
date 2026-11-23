@@ -28,6 +28,8 @@
 #define EW32_DYNAMIC                            1    /**< Dynamic allocation mode (if supported). */
 /// @}
 
+#define EW32_LOW  0x0
+#define EW32_HIGH 0x1
 
 /// ================        CONFIG START        ================
 

@@ -19,36 +19,40 @@
  */
 
 #include "ew32_devm/ew32_config.h"
+#include "ew32_base/osa/ew32_osa_api.h"
 
-#if EW32_PLATFORM == EW32_PLATFORM_ARDUINO ||  EW32_PLATFORM_RPPICO || EW32_PLATFORM_ARDUINO_ESP32
+#if EW32_PLATFORM == EW32_PLATFORM_ESP ||  EW32_PLATFORM_RPPICO || EW32_PLATFORM_ARDUINO_ESP32
+
 #include "ew32_devm/ew32_i2c.h"
+#include "ew32_devm/API/ew32_hal_i2c.h"
+
 #include "ew32_base/ew32_logging.h"
 #include "ew32_devm/ew32_gpio.h"
+ 
 
 #include <stdio.h>
 
 #include <Wire.h>
 
 extern "C" {
-
-uint8_t ew32_i2c_isadress(ew32_dev_t* device, uint8_t address) {
+uint8_t ew32_hal_i2c_isadress(ew32_dev_t* device, uint8_t address) {
      ew32_i2c_cfg_t *handle = (ew32_i2c_cfg_t *)device->userdata;
 
     return (handle->address_set[address]); 
 }
 
-uint8_t ew32_i2c_probe(ew32_dev_t* device, void*) {
+uint8_t ew32_hal_i2c_probe(ew32_dev_t* device, void*) {
     ew32_i2c_cfg_t *handle = (ew32_i2c_cfg_t *)device->userdata;
 
     uint8_t error;
     
     TwoWire &wire = handle->port_num == 0 ? Wire : Wire1;
 
-    #if EW32_PLATFORM == EW32_PLATFORM_RPPICO  
+    #if EW32_TASKAPI_PLATFORM_SUB == 2  
         wire.setSDA(handle->pin_sda);
         wire.setSCL(handle->pin_scl);
         wire.begin();
-    #else
+    #elif EW32_TASKAPI_PLATFORM_SUB == 1 
         wire.begin(handle->pin_sda,handle->pin_scl);
     #endif
 
@@ -65,29 +69,29 @@ uint8_t ew32_i2c_probe(ew32_dev_t* device, void*) {
 
     return EW32_DEVICE_NO_ERROR;
 }
-uint8_t ew32_i2c_setup(ew32_dev_t* device, void*) {
+uint8_t ew32_hal_i2c_setup(ew32_dev_t* device, void*) {
     ew32_i2c_cfg_t *handle = (ew32_i2c_cfg_t *)device->userdata;
     TwoWire &wire = handle->port_num == 0 ? Wire : Wire1;
 
-    #if EW32_PLATFORM == EW32_PLATFORM_RPPICO 
+    if(ew32_hal_gpio_can_used_pin(handle->pin_sda) != EW32_ERROR_OK) return 1;
+    if(ew32_hal_gpio_can_used_pin(handle->pin_scl) != EW32_ERROR_OK) return 1;
+
+    ew32_hal_gpio_marked_pin(handle->pin_sda, OUTPUT, EW32_DEVICE_GPIO_USED_I2C);
+    ew32_hal_gpio_marked_pin(handle->pin_scl, OUTPUT, EW32_DEVICE_GPIO_USED_I2C);
+
+    #if EW32_TASKAPI_PLATFORM_SUB == 2 
         wire.setSDA(handle->pin_sda);
         wire.setSCL(handle->pin_scl);
         wire.begin();
-    #else
+    #elif EW32_TASKAPI_PLATFORM_SUB == 1 
         wire.begin(handle->pin_sda,handle->pin_scl);
     #endif
-
-    ew32_device_gpio_can_used_pin(handle->pin_sda);
-    ew32_device_gpio_can_used_pin(handle->pin_scl);
-    
-    ew32_device_gpio_marked_pin(handle->pin_sda, OUTPUT, EW32_DEVICE_GPIO_USED_I2C);
-    ew32_device_gpio_marked_pin(handle->pin_scl, OUTPUT, EW32_DEVICE_GPIO_USED_I2C);
 
     return EW32_DEVICE_NO_ERROR;
 }
 
 
-int32_t ew32_i2c_read(ew32_dev_t* device, void* data, int32_t size) {
+int32_t ew32_hal_i2c_read(ew32_dev_t* device, void* data, const int32_t size) {
     if(data == NULL || device == NULL) return EW32_DEVICE_ERROR_NULL;
     if(device->userdata == NULL) return EW32_DEVICE_ERROR_NULL;
 
@@ -95,6 +99,8 @@ int32_t ew32_i2c_read(ew32_dev_t* device, void* data, int32_t size) {
 
     ew32_i2c_cfg_t *handle = (ew32_i2c_cfg_t *)device->userdata;
     ew32_i2c_io_t *msg = (ew32_i2c_io_t*) data;
+
+    if(handle->powerstate <= 2 || device->state == EW32_DEVICE_STATE_SUSPEND) return -1;
 
     int8_t _ret = 0;
 
@@ -128,13 +134,15 @@ int32_t ew32_i2c_read(ew32_dev_t* device, void* data, int32_t size) {
     return _ret;
 }
 
-int32_t ew32_i2c_write(ew32_dev_t* device, void* data, int32_t size) {
+int32_t ew32_hal_i2c_write(ew32_dev_t* device, const void* data, const int32_t size) {
     if(data == NULL || device == NULL) return EW32_DEVICE_ERROR_NULL;
     if(device->userdata == NULL) return EW32_DEVICE_ERROR_NULL;
 
 
     ew32_i2c_cfg_t *handle = (ew32_i2c_cfg_t *)device->userdata;
     ew32_i2c_io_t *msg = (ew32_i2c_io_t*) data;
+
+    if(handle->powerstate <= 2 || device->state == EW32_DEVICE_STATE_SUSPEND) return -1;
 
     int8_t _ret = 0;
 
@@ -155,14 +163,34 @@ int32_t ew32_i2c_write(ew32_dev_t* device, void* data, int32_t size) {
 }
 
 
-uint8_t ew32_i2c_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state) {
-    return EW32_DEVICE_ERROR_NOTIMPL;
-}
-uint8_t ew32_i2c_get_state(ew32_dev_t* device, uint8_t state_id) {
+uint8_t ew32_hal_i2c_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state) {
+    if (device == NULL) return EW32_DEVICE_ERROR_NULL;
+    if(device->userdata == NULL) return EW32_DEVICE_ERROR_NULL;
 
-    return EW32_DEVICE_ERROR_NOTIMPL;
-}
+     ew32_i2c_cfg_t *handle = (ew32_i2c_cfg_t *)device->userdata;
 
+    if (state_id == EW32_DEVICE_STATEID_MODE) {
+        device->state = state;
+    }
+
+    if (state_id == EW32_DEVICE_STATEID_POWERSTATE) {
+        handle->powerstate = state;
+    }
+
+    return 0;
+}
+uint8_t ew32_hal_i2c_get_state(ew32_dev_t* device, uint8_t state_id) {
+
+    if (device == NULL) return EW32_DEVICE_ERROR_NULL;
+    if(device->userdata == NULL) return EW32_DEVICE_ERROR_NULL;
+
+    ew32_i2c_cfg_t *handle = (ew32_i2c_cfg_t *)device->userdata;
+
+    if (state_id == EW32_DEVICE_STATEID_MODE) return device->state;
+    if (state_id == EW32_DEVICE_STATEID_POWERSTATE) return handle->powerstate;
+
+    return 0;
+}
 }
 
 #endif

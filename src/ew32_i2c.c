@@ -21,20 +21,12 @@
 #include "ew32_devm/ew32_config.h"
 #include "ew32_devm/ew32_i2c.h"
 
-#include "ew32_base/osa/ew32_api.h"
+#include "ew32_base/osa/ew32_osa_api.h"
 #include "ew32_devm/ew32_devm.h"
-
+#include "ew32_devm/API/ew32_hal_i2c.h"
 #include "string.h"
 
 #if EW32_DEVICE_USE_I2C == EW32_CONFIG_YES
-
-extern uint8_t ew32_i2c_probe(ew32_dev_t* device, void* cfg);
-extern uint8_t ew32_i2c_setup(ew32_dev_t* device, void* cfg);
-extern uint8_t ew32_i2c_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state);
-extern uint8_t ew32_i2c_get_state(ew32_dev_t* device, uint8_t state_id);
-extern int32_t ew32_i2c_write(ew32_dev_t* device, void* data, int32_t size);
-extern int32_t ew32_i2c_read(ew32_dev_t* device, void* data, int32_t size);
-extern uint8_t ew32_i2c_isadress(ew32_dev_t* device, uint8_t address);
 
 static ew32_dev_t __i2c_devices[EW32_DEVICE_I2C_MAX_DEVICES];     
 static ew32_i2c_cfg_t __global_cfg[EW32_DEVICE_I2C_MAX_DEVICES];
@@ -51,7 +43,7 @@ uint8_t ew32_device_i2c_setup(uint8_t sda, uint8_t scl, uint8_t port_num) {
     __global_cfg[port_num].pin_sda = sda;
     __global_cfg[port_num].port_num = port_num;
     __global_cfg[port_num].hardware = port_num > EW32_HAL_I2C_HARDWARE_NUM; // port 0 und 1 used hardware i2c
-
+    __global_cfg[port_num].powerstate = 5;
     
     __i2c_devices[port_num].subpath[0] = 'b';
     __i2c_devices[port_num].subpath[1] = 'u';
@@ -68,12 +60,12 @@ uint8_t ew32_device_i2c_setup(uint8_t sda, uint8_t scl, uint8_t port_num) {
     __i2c_devices[port_num].type = EW32_DEVICE_TYPE_I2C;
     __i2c_devices[port_num].parent = NULL;
     __i2c_devices[port_num].rw =  EW32_DEVICE_READ_WRITE;
-    __i2c_devices[port_num].set_state = ew32_i2c_set_state;
-    __i2c_devices[port_num].get_state = ew32_i2c_get_state;
-    __i2c_devices[port_num].probe = ew32_i2c_probe;
-    __i2c_devices[port_num].setup = ew32_i2c_setup;
-    __i2c_devices[port_num].write = ew32_i2c_write;
-    __i2c_devices[port_num].read = ew32_i2c_read;
+    __i2c_devices[port_num].set_state = ew32_hal_i2c_set_state;
+    __i2c_devices[port_num].get_state = ew32_hal_i2c_get_state;
+    __i2c_devices[port_num].probe = ew32_hal_i2c_probe;
+    __i2c_devices[port_num].setup = ew32_hal_i2c_setup;
+    __i2c_devices[port_num].write = ew32_hal_i2c_write;
+    __i2c_devices[port_num].read = ew32_hal_i2c_read;
     __i2c_devices[port_num].on_run = NULL;
 
     __i2c_devices[port_num].userdata = &__global_cfg[port_num];
@@ -88,7 +80,7 @@ uint8_t ew32_device_i2c_isadress(uint8_t port_num, uint8_t address)  {
     if( __global_cfg[port_num].used != 1) return EW32_DEVICE_ERROR_NOT_USED; // not in use
 
 
-    return ew32_i2c_isadress(&__i2c_devices[port_num], address);
+    return ew32_hal_i2c_isadress(&__i2c_devices[port_num], address);
 }
 
 
@@ -96,14 +88,14 @@ int32_t ew32_device_i2c_read(uint8_t port_num,  ew32_i2c_io_t* data, int32_t siz
     if(port_num >= EW32_DEVICE_I2C_MAX_DEVICES) return EW32_DEVICE_ERROR_INVALID_ARG;
     if( __global_cfg[port_num].used != 1) return EW32_DEVICE_ERROR_NOT_USED; // not in use
 
-    return ew32_i2c_read(&__i2c_devices[port_num], data, size);
+    return ew32_hal_i2c_read(&__i2c_devices[port_num], data, size);
 }
 
 int32_t ew32_device_i2c_write(uint8_t port_num,  ew32_i2c_io_t* data, int32_t size) {
     if(port_num >= EW32_DEVICE_I2C_MAX_DEVICES) return EW32_DEVICE_ERROR_INVALID_ARG;
     if( __global_cfg[port_num].used != 1) return EW32_DEVICE_ERROR_NOT_USED; // not in use
 
-    return ew32_i2c_write(&__i2c_devices[port_num], data, size);
+    return ew32_hal_i2c_write(&__i2c_devices[port_num], data, size);
 }
 
 #endif

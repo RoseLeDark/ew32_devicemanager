@@ -49,27 +49,34 @@ uint8_t ew32_powermanager_probe(ew32_dev_t* device, void* cfg) {
 
 uint8_t ew32_powermanager_setup(ew32_dev_t* device, void* cfg) {
     if (device == NULL || device->userdata == NULL) return EW32_DEVICE_ERROR_NULL;
-    ew32_power_cfg_t* _pstate = (ew32_power_cfg_t*)device->userdata;
+
 
     return 0;
 }
 
 uint8_t ew32_powermanager_get_state(ew32_dev_t* device, uint8_t stateid) {
     if (device == NULL) return 0;
-    return (stateid == EW32_DEVICE_STATEID_POWERSTATE) ? device->state : 0;
+    ew32_power_cfg_t* _pstate = (ew32_power_cfg_t*)device->userdata;
+
+    if (stateid == EW32_DEVICE_STATEID_MODE) return device->state;
+    if (stateid == EW32_DEVICE_STATEID_POWERSTATE)  return _pstate->_current;
+
+    return 0;
 }
 
 
 uint8_t ew32_powermanager_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state) {
     if (device == NULL) return EW32_DEVICE_ERROR_NULL;
+
     if (state_id == EW32_DEVICE_STATEID_MODE) {
         xewLoggingDebug1(device->subpath, "set mode state to: %d\n", state);
         device->state = state;
     }
+
     return 0;
 }
 
-int32_t ew32_powermanager_write(ew32_dev_t* device, void* data, int32_t size) {
+int32_t ew32_powermanager_write(ew32_dev_t* device,const  void* data,const  int32_t size) {
     if (device == NULL || device->userdata == NULL) return -1;
     ew32_power_cfg_t* _pstate = (ew32_power_cfg_t*)device->userdata;
 
@@ -85,7 +92,7 @@ int32_t ew32_powermanager_write(ew32_dev_t* device, void* data, int32_t size) {
 }
 
 
-int32_t ew32_powermanager_read(ew32_dev_t* device, void* data, int32_t size) {
+int32_t ew32_powermanager_read(ew32_dev_t* device, void* data, const int32_t size) {
     if (device == NULL || device->userdata == NULL) return -1;
     ew32_power_cfg_t* _pstate = (ew32_power_cfg_t*)device->userdata;
 
