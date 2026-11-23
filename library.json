@@ -20,8 +20,9 @@
   "frameworks": "arduino",
   "platforms": "*",
   "dependencies":  {
-      "pba3h11aso/ew32_base": "0.4.5"
+      "pba3h11aso/ew32_base": "@0.4.5"
   },
+  "changelog": "CHANGELOG.md",
   "examples": [
       {
           "name": "Main",
