@@ -35,16 +35,16 @@
 #include <Wire.h>
 
 extern "C" {
-uint8_t ew32_hal_i2c_isadress(ew32_dev_t* device, uint8_t address) {
+ew32_bool_t ew32_hal_i2c_isadress(ew32_dev_t* device, ew32_ui8_t address) {
      ew32_i2c_cfg_t *handle = (ew32_i2c_cfg_t *)device->userdata;
 
-    return (handle->address_set[address]); 
+    return (handle->address_set[address]) ? ewTRUE : ewFALSE; 
 }
 
-uint8_t ew32_hal_i2c_probe(ew32_dev_t* device, void*) {
+ew32_error_t ew32_hal_i2c_probe(ew32_dev_t* device, void*) {
     ew32_i2c_cfg_t *handle = (ew32_i2c_cfg_t *)device->userdata;
 
-    uint8_t error;
+    ew32_ui8_t error;
     
     TwoWire &wire = handle->port_num == 0 ? Wire : Wire1;
 
@@ -56,7 +56,7 @@ uint8_t ew32_hal_i2c_probe(ew32_dev_t* device, void*) {
         wire.begin(handle->pin_sda,handle->pin_scl);
     #endif
 
-    for (uint8_t address  = 1; address < 127; address++) {
+    for (ew32_ui8_t address  = 1; address < 127; address++) {
         wire.beginTransmission(address);
         error = wire.endTransmission();
 
@@ -69,7 +69,7 @@ uint8_t ew32_hal_i2c_probe(ew32_dev_t* device, void*) {
 
     return EW32_DEVICE_NO_ERROR;
 }
-uint8_t ew32_hal_i2c_setup(ew32_dev_t* device, void*) {
+ew32_error_t ew32_hal_i2c_setup(ew32_dev_t* device, void*) {
     ew32_i2c_cfg_t *handle = (ew32_i2c_cfg_t *)device->userdata;
     TwoWire &wire = handle->port_num == 0 ? Wire : Wire1;
 
@@ -91,7 +91,7 @@ uint8_t ew32_hal_i2c_setup(ew32_dev_t* device, void*) {
 }
 
 
-int32_t ew32_hal_i2c_read(ew32_dev_t* device, void* data, const int32_t size) {
+ew32_ssize_t ew32_hal_i2c_read(ew32_dev_t* device, void* data, const ew32_size_t size) {
     if(data == NULL || device == NULL) return EW32_DEVICE_ERROR_NULL;
     if(device->userdata == NULL) return EW32_DEVICE_ERROR_NULL;
 
@@ -109,7 +109,7 @@ int32_t ew32_hal_i2c_read(ew32_dev_t* device, void* data, const int32_t size) {
     if(msg->message_id == EW32_I2C_RECIVE_MSG_ID) {
 
         wire.beginTransmission(msg->addr);
-        wire.write((uint8_t*)msg->message, msg->msg_size);
+        wire.write((ew32_ui8_t*)msg->message, msg->msg_size);
          /// Errors:
     //  0 : Success
     //  1 : Data too long
@@ -134,7 +134,7 @@ int32_t ew32_hal_i2c_read(ew32_dev_t* device, void* data, const int32_t size) {
     return _ret;
 }
 
-int32_t ew32_hal_i2c_write(ew32_dev_t* device, const void* data, const int32_t size) {
+ew32_ssize_t ew32_hal_i2c_write(ew32_dev_t* device, const void* data, const ew32_size_t size) {
     if(data == NULL || device == NULL) return EW32_DEVICE_ERROR_NULL;
     if(device->userdata == NULL) return EW32_DEVICE_ERROR_NULL;
 
@@ -163,7 +163,7 @@ int32_t ew32_hal_i2c_write(ew32_dev_t* device, const void* data, const int32_t s
 }
 
 
-uint8_t ew32_hal_i2c_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state) {
+ew32_error_t ew32_hal_i2c_set_state(ew32_dev_t* device, ew32_ui8_t state_id, ew32_state_t state) {
     if (device == NULL) return EW32_DEVICE_ERROR_NULL;
     if(device->userdata == NULL) return EW32_DEVICE_ERROR_NULL;
 
@@ -179,17 +179,17 @@ uint8_t ew32_hal_i2c_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t sta
 
     return 0;
 }
-uint8_t ew32_hal_i2c_get_state(ew32_dev_t* device, uint8_t state_id) {
+ew32_state_t ew32_hal_i2c_get_state(ew32_dev_t* device, ew32_ui8_t state_id) {
 
-    if (device == NULL) return EW32_DEVICE_ERROR_NULL;
-    if(device->userdata == NULL) return EW32_DEVICE_ERROR_NULL;
+    if (device == NULL) return -EW32_DEVICE_ERROR_NULL;
+    if(device->userdata == NULL) return -EW32_DEVICE_ERROR_NULL;
 
     ew32_i2c_cfg_t *handle = (ew32_i2c_cfg_t *)device->userdata;
 
     if (state_id == EW32_DEVICE_STATEID_MODE) return device->state;
     if (state_id == EW32_DEVICE_STATEID_POWERSTATE) return handle->powerstate;
 
-    return 0;
+    return -1;
 }
 }
 

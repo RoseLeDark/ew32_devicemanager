@@ -27,13 +27,13 @@
 extern "C" {
 #endif
 
-uint8_t ew32_hal_i2c_isadress(ew32_dev_t* device, uint8_t address);
-uint8_t ew32_hal_i2c_probe(ew32_dev_t* device, void*);
-uint8_t ew32_hal_i2c_setup(ew32_dev_t* device, void*) ;
-int32_t ew32_hal_i2c_read(ew32_dev_t* device, void* data, const int32_t size) ;
-int32_t ew32_hal_i2c_write(ew32_dev_t* device, const void* data, const int32_t size) ;
-uint8_t ew32_hal_i2c_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state);
-uint8_t ew32_hal_i2c_get_state(ew32_dev_t* device, uint8_t state_id) ;
+ew32_bool_t ew32_hal_i2c_isadress(ew32_dev_t* device, ew32_ui8_t address);
+ew32_error_t ew32_hal_i2c_probe(ew32_dev_t* device, void*);
+ew32_error_t ew32_hal_i2c_setup(ew32_dev_t* device, void*) ;
+ew32_ssize_t ew32_hal_i2c_read(ew32_dev_t* device, void* data, const ew32_size_t size) ;
+ew32_ssize_t ew32_hal_i2c_write(ew32_dev_t* device, const void* data, const ew32_size_t size) ;
+ew32_error_t ew32_hal_i2c_set_state(ew32_dev_t* device, ew32_ui8_t state_id, ew32_state_t state);
+ew32_state_t ew32_hal_i2c_get_state(ew32_dev_t* device, ew32_ui8_t state_id) ;
 
 #ifdef __cplusplus
 }

@@ -20,51 +20,45 @@
 
 #pragma once
 
-#include "ew32_device.h"
+#include <stddef.h>
+#include <string.h>
 
-#define EW32_DEVICEMANAGER_STATE_INIT       1
-#define EW32_DEVICEMANAGER_STATE_PROBE      2
-#define EW32_DEVICEMANAGER_STATE_SETUP      3
-#define EW32_DEVICEMANAGER_STATE_RUNNING    4
-#define EW32_DEVICEMANAGER_STATE_ALL        5
+#define EW32_DEVM_API_VERSION_100 1 // 1.00
+#define EW32_DEVM_API_VERSION_110 0 // 1.10
+#define EW32_DEVM_API_VERSION_150 0 // 1.50
 
-#define EW32_DEVICEMANAGER_ALL              -1
+#include "ew32_config.h"
+#include "ew32_version.h"
+#include "ew32_base/ew32_types.h"
+#include "ew32_base/ew32_logging.h"
+#include "ew32_devm/ew32_devicemanager.h"
+#include "ew32_devm/ew32_vfs.h"
 
-#define EW32_POWERSTATE_L0                  0  // deep sleep / sensor poweroff
-#define EW32_POWERSTATE_L1                  1   
-#define EW32_POWERSTATE_L2                  2
-#define EW32_POWERSTATE_L3                  3
-#define EW32_POWERSTATE_L4                  4
-#define EW32_POWERSTATE_L5                  5   // normal powerstate
+#if EW32_DEVICE_USE_I2C == EW32_CONFIG_YES
+#include "ew32_devm/ew32_i2c.h"
+#endif
 
-#define EW32_POWERSTATE_DEVICEOFF           10 // device can be removed
+#if EW32_DEVICE_USE_UART == EW32_CONFIG_YES
+#include "ew32_devm/ew32_uart.h"
+#endif
+
+#if EW32_DEVICE_USE_SIMPLE_POWERMANAGER == EW32_CONFIG_YES
+#include "ew32_devm/ew32_power.h"
+#endif
+
+#if EW32_DEVICE_USE_VNULL == EW32_CONFIG_YES
+#include "ew32_devm/ew32_nulldev.h"
+#endif
+
+#if EW32_DEVICE_USE_STDDEVICE == EW32_CONFIG_YES
+#include "ew32_devm/ew32_std.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-uint8_t ew32_devicemanager_create();
-uint8_t ew32_devicemanager_registdevice(ew32_dev_t* device,  void* cfg, uint8_t preInit);
-uint8_t ew32_devicemanager_get_device(const char* path, ew32_dev_t** device);
-
-uint8_t ew32_devicemanager_probeall();
-uint8_t ew32_devicemanager_setup();
-uint8_t ew32_devicemanager_run();
-
-uint16_t ew32_devicemanager_get_running();
-
-void ew32_devicemanager_powerstate_set(uint8_t newState);
-
-void ew32_devicemanager_dump(uint8_t level );
-
-uint8_t ew32_devicemanager_setstate(const char* path, uint8_t state_id, uint8_t state);
-uint8_t ew32_devicemanager_setstate_by_id(ew32_devid_t id, uint8_t state_id, uint8_t state);
-
-uint8_t ew32_devicemanager_getstate(const char* path, uint8_t state_id);
-uint8_t ew32_devicemanager_getstate_by_id(ew32_devid_t id, uint8_t state_id);
-
-
-void ew32_devicemanager_loop(void* arg);
+ew32_error_t ew32_init_framework(logging_handler handle, ew32_ui8_t minLevel, ew32_ui8_t maxLevel);
 
 #ifdef __cplusplus
 }

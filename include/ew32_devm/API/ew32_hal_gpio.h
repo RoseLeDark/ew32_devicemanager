@@ -33,7 +33,8 @@
 #define EW32_DEVICE_GPIO_USED_I2S           3
 #define EW32_DEVICE_GPIO_USED_SPI           4
 #define EW32_DEVICE_GPIO_USED_TOUCH         5
-#define EW32_DEVICE_GPIO_USED_USER          6
+#define EW32_DEVICE_GPIO_USED_GPIO          6
+#define EW32_DEVICE_GPIO_USED_USER          7
 
 
 
@@ -51,19 +52,40 @@
 extern "C" {
 #endif
 
+typedef void (*ew32_hal_gpio_isr)(void*);
+
 typedef struct EW32_PACKED {
-    uint8_t state; // 0 => resaviert, 1 => free, 2 => using
-    uint8_t dev;
-    uint8_t mode;
+    ew32_ui8_t state; // 0 => resaviert, 1 => free, 2 => using
+    ew32_ui8_t dev;
+    ew32_ui8_t mode;
+
+    ew32_bool_t isr;
+    ew32_hal_gpio_isr func_isr;
+    ew32_bool_t isr_funct;
+    void* pArg;
+
 } ew32_gpio_t;
 
+#if CONFIG_ARDUINO_ISR_IRAM
+#define EW32_ISR_ATTR       IRAM_ATTR
+#define EW32_ISR_FLAG       ESP_INTR_FLAG_IRAM
+#else
+#define EW32_ISR_ATTR
+#define EW32_ISR_FLAG (0)
+#endif
 
-uint8_t ew32_hal_gpio_can_used_pin(uint16_t pin) ;
-uint8_t ew32_hal_gpio_marked_pin(uint16_t pin, uint8_t mode, uint16_t dev) ;
+ew32_error_t ew32_hal_gpio_init();
 
-uint8_t ew32_hal_gpio_setup_pin(uint16_t pin, uint8_t mode) ;
-uint8_t ew32_hal_gpio_digital_set(uint16_t pin, uint8_t c);
-int8_t ew32_hal_gpio_digital_get(uint16_t pin);
+ew32_bool_t ew32_hal_gpio_isvalid_pin(ew32_ui16_t pin) ;
+
+ew32_error_t ew32_hal_gpio_can_used_pin(ew32_ui16_t pin) ;
+ew32_error_t ew32_hal_gpio_marked_pin(ew32_ui16_t pin, ew32_ui8_t mode, ew32_ui16_t dev) ;
+
+ew32_error_t ew32_hal_gpio_setup_pin(ew32_ui16_t pin, ew32_ui8_t mode) ;
+ew32_error_t ew32_hal_gpio_digital_set(ew32_ui16_t pin, ew32_ui8_t c);
+ew32_i8_t ew32_hal_gpio_digital_get(ew32_ui16_t pin);
+
+ew32_error_t ew32_hal_gpio_attache_isr(ew32_ui16_t pin, ew32_hal_gpio_isr isrfunc, void *arg, ew32_i32_t intrt, ew32_bool_t functional);
 
 #ifdef __cplusplus
 }

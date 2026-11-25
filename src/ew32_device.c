@@ -24,7 +24,7 @@
 #include <ew32_base/ew32_logging.h>
 #include "ew32_devm/ew32_api.h"
 
-int32_t ew32_device_send(ew32_dev_t* device, const void* data, const  int32_t size) {
+ew32_ssize_t ew32_device_send(ew32_dev_t* device, const void* data, const  ew32_size_t size) {
     if(device == NULL) return -EW32_DEVICE_ERROR_NULL;
 
     ew32_dev_t *_used_device = (device->parent != NULL) ? device->parent : device;
@@ -34,8 +34,8 @@ int32_t ew32_device_send(ew32_dev_t* device, const void* data, const  int32_t si
 
 
     
-    int32_t datasended = 0;
-    uint8_t i = 0;
+    ew32_ssize_t datasended = 0;
+    ew32_ui8_t i = 0;
 
     while(1) {
         if( i >= 3) break;
@@ -50,7 +50,7 @@ int32_t ew32_device_send(ew32_dev_t* device, const void* data, const  int32_t si
 
     return datasended;
 }
-int32_t ew32_device_read(ew32_dev_t* device, void* data, const int32_t size) {
+ew32_ssize_t ew32_device_read(ew32_dev_t* device, void* data, const ew32_size_t size) {
     if(device == NULL) return -EW32_DEVICE_ERROR_NULL;
 
     ew32_dev_t *_used_device = (device->parent != NULL) ? device->parent : device;
@@ -58,8 +58,8 @@ int32_t ew32_device_read(ew32_dev_t* device, void* data, const int32_t size) {
     if(_used_device->read == NULL) return -EW32_DEVICE_ERROR_NOTIMPL;
     if(ew32_device_can_read(_used_device) == EW32_CONFIG_NO) return -EW32_DEVICE_ERROR_NOT_SUPPORTED;
 
-    int32_t dataread = 0;
-    uint8_t i = 0;
+    ew32_ssize_t dataread = 0;
+    ew32_ui8_t i = 0;
 
     while(1) {
         if( i >= 3) break;
@@ -73,12 +73,12 @@ int32_t ew32_device_read(ew32_dev_t* device, void* data, const int32_t size) {
 
     return dataread;
 }
-uint8_t ew32_device_pstate(ew32_dev_t* device, uint8_t state) {
+ew32_error_t ew32_device_pstate(ew32_dev_t* device, ew32_ui8_t state) {
     if(device == NULL) return EW32_DEVICE_ERROR_NULL;
     if(device->set_state == NULL) return EW32_DEVICE_ERROR_NOTIMPL; 
 
-    uint8_t _ret = EW32_DEVICE_NO_ERROR;
-    uint8_t i = 0;
+    ew32_error_t _ret = EW32_DEVICE_NO_ERROR;
+    ew32_ui8_t i = 0;
     
 
     while(1) {
@@ -96,64 +96,64 @@ uint8_t ew32_device_pstate(ew32_dev_t* device, uint8_t state) {
 
     return _ret;
 }
-uint8_t ew32_device_probe(ew32_dev_t* device, void* cfg) {
+ew32_error_t ew32_device_probe(ew32_dev_t* device, void* cfg) {
     if(device == NULL) return EW32_DEVICE_ERROR_NULL;
     if(device->probe == NULL) return EW32_DEVICE_ERROR_NOTIMPL; 
 
-    uint8_t _ret = EW32_DEVICE_NO_ERROR;
+    ew32_error_t _ret = EW32_DEVICE_NO_ERROR;
     
     _ret = device->probe(device, cfg);
 
     return _ret;
 
 }
-uint8_t ew32_device_setup(ew32_dev_t* device, void* cfg) {
+ew32_error_t ew32_device_setup(ew32_dev_t* device, void* cfg) {
     if(device == NULL) return EW32_DEVICE_ERROR_NULL;
     if(device->setup == NULL) return EW32_DEVICE_ERROR_NOTIMPL; 
 
-    uint8_t _ret = EW32_DEVICE_NO_ERROR;
+    ew32_error_t _ret = EW32_DEVICE_NO_ERROR;
     
     _ret = device->setup(device, cfg);
 
     return _ret;
 }
-uint8_t ew32_device_set_userdata(ew32_dev_t* device, void* data) {
+ew32_error_t ew32_device_set_userdata(ew32_dev_t* device, void* data) {
     if(device == NULL) return EW32_DEVICE_ERROR_NULL;
 
     device->userdata = data;
 
     return EW32_DEVICE_NO_ERROR;
 }
-uint8_t ew32_device_get_userdata(ew32_dev_t* device, void** data) {
+ew32_error_t ew32_device_get_userdata(ew32_dev_t* device, void** data) {
     if(device == NULL) return EW32_DEVICE_ERROR_NULL;
-    uint8_t _ret = EW32_DEVICE_NO_ERROR;
+    ew32_error_t _ret = EW32_DEVICE_NO_ERROR;
 
     if(data != NULL) *data = device->userdata;
 
     return _ret;
 }
 
-uint8_t ew32_device_can_send(ew32_dev_t* device) {
+ew32_error_t ew32_device_can_send(ew32_dev_t* device) {
     if(device == NULL) return EW32_DEVICE_ERROR_NULL;
     return (device->rw == EW32_DEVICE_WRITE_ONLY || device->rw == EW32_DEVICE_READ_WRITE) ? 
         EW32_CONFIG_YES : EW32_CONFIG_NO;
 }
 
 
-uint8_t ew32_device_can_read(ew32_dev_t* device) {
+ew32_error_t ew32_device_can_read(ew32_dev_t* device) {
     if(device == NULL) return EW32_DEVICE_ERROR_NULL;
     return (device->rw == EW32_DEVICE_READ_ONLY || device->rw == EW32_DEVICE_READ_WRITE) ? 
         EW32_CONFIG_YES : EW32_CONFIG_NO;
 }
 
 
-uint8_t ew32_device_get_parent(ew32_dev_t* device, ew32_dev_t** parent) {
+ew32_error_t ew32_device_get_parent(ew32_dev_t* device, ew32_dev_t** parent) {
     if(device == NULL) return EW32_DEVICE_ERROR_NULL;
     if(parent != NULL) *parent = device->parent;
 
     return  (device->parent != NULL ? EW32_CONFIG_YES : EW32_CONFIG_NO);
 }
-uint8_t ew32_device_set_parent(ew32_dev_t* device, ew32_dev_t* parent) {
+ew32_error_t ew32_device_set_parent(ew32_dev_t* device, ew32_dev_t* parent) {
     if(device == NULL) return EW32_DEVICE_ERROR_NULL;
 
     device->parent = parent;
@@ -161,19 +161,19 @@ uint8_t ew32_device_set_parent(ew32_dev_t* device, ew32_dev_t* parent) {
 
     return EW32_DEVICE_NO_ERROR;
 }
-int8_t ew32_device_get_state(ew32_dev_t* device, uint8_t state_id) {
+ew32_state_t ew32_device_get_state(ew32_dev_t* device, ew32_ui8_t state_id) {
     if(device == NULL) return -EW32_DEVICE_ERROR_NULL;
     return (device->get_state != NULL) ? device->get_state(device, state_id) : -1;
 
 }
 
-int8_t ew32_device_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state) {
-    if(device == NULL) return -EW32_DEVICE_ERROR_NULL;
+ew32_error_t ew32_device_set_state(ew32_dev_t* device, ew32_ui8_t state_id, ew32_state_t state) {
+    if(device == NULL) return EW32_DEVICE_ERROR_NULL;
     
     if(device->set_state != NULL) {
         device->set_state(device, state_id, state);
         return 0;
     }
 
-    return -1;
+    return 1;
 }

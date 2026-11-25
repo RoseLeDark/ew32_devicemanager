@@ -38,14 +38,14 @@
 
 ew32_dev_t DEVICE[3];
 
-uint8_t ew32_std_probe(ew32_dev_t* device, void* cfg) {
+ew32_error_t ew32_std_probe(ew32_dev_t* device, void* cfg) {
     return 0;
 }
-uint8_t ew32_std_setup(ew32_dev_t* device, void* cfg) {
+ew32_error_t ew32_std_setup(ew32_dev_t* device, void* cfg) {
     return 0;
 }
 
-int32_t ew32_std_write(ew32_dev_t* device, const void* data, const  int32_t size) {
+ew32_ssize_t ew32_std_write(ew32_dev_t* device, const void* data, const  ew32_size_t size) {
     if (device == NULL || data == NULL || size <= 0) return -1;
 
     int _user = device->raw_userdata;
@@ -68,7 +68,7 @@ int32_t ew32_std_write(ew32_dev_t* device, const void* data, const  int32_t size
 
     return _ret;
 }
-int32_t ew32_std_read(ew32_dev_t* device, void* data, const int32_t size) {
+ew32_ssize_t ew32_std_read(ew32_dev_t* device, void* data, const ew32_size_t size) {
     if (device == NULL || data == NULL || size <= 0) return -1;
 
     int _user = device->raw_userdata;
@@ -96,7 +96,7 @@ int32_t ew32_std_read(ew32_dev_t* device, void* data, const int32_t size) {
 
 
 
-void ew32_dev_std_setdevice(const uint8_t id, ew32_dev_t* parent) {
+void ew32_dev_std_setdevice(const ew32_ui8_t id, ew32_dev_t* parent) {
     if (id >= 3) return;
 
     if (parent != NULL && strcmp(parent->subpath, DEVICE[id].subpath) == 0) {
@@ -107,7 +107,7 @@ void ew32_dev_std_setdevice(const uint8_t id, ew32_dev_t* parent) {
     DEVICE[id].parent = parent;
 }
 
-uint8_t ew32_dev_std_setup(const uint8_t id, ew32_dev_t** device) {
+ew32_error_t ew32_dev_std_setup(const ew32_ui8_t id, ew32_dev_t** device) {
   
     if (id >= 3) return EW32_DEVICE_ERROR_INVALID_ARG; /* bzw. dein passender Fehlercode */
     

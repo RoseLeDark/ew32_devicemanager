@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-uint8_t ew32_dev_std_setup(const uint8_t id, ew32_dev_t** device);
+ew32_error_t ew32_dev_std_setup(const uint8_t id, ew32_dev_t** device);
 
 void ew32_dev_std_setdevice(const uint8_t id, ew32_dev_t* parent);
 

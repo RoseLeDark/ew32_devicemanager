@@ -19,3 +19,4 @@
  */
 
 #include <ew32_base/osa/ew32_osa_api.h>
+#include <ew32_base/ew32_types.h>

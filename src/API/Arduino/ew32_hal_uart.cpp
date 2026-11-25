@@ -28,25 +28,14 @@
 #include "HardwareSerial.h"
 #include "ew32_devm/API/ew32_hal_uart.h"
 
-uint32_t ew32_api_uart_write(uint32_t portnum, const uint8_t* buf, const uint32_t size) {
-    if(portnum== 0) return Serial.write( buf, size);
-    if(portnum== 1) return Serial1.write( buf, size);
-    if(portnum == 2) return Serial2.write( buf, size);
-    return -1;
-}
-uint32_t ew32_api_uart_read(uint32_t portnum, uint8_t* buf, const uint32_t size) {
-    if(portnum == 0) return Serial.readBytes(buf, size);
-    if(portnum == 1) return Serial1.readBytes(buf, size);
-    if(portnum == 2) return Serial2.readBytes(buf, size);
-    return -1;
-}
+extern "C" {
 
-uint8_t ew32_hal_uart_probe(ew32_dev_t* device, void* cfg) {
+ew32_error_t ew32_hal_uart_probe(ew32_dev_t* device, void* cfg) {
 
     return 0;
 }
 
-uint8_t ew32_hal_uart_setup(ew32_dev_t* device, void* cfg) {
+ew32_error_t ew32_hal_uart_setup(ew32_dev_t* device, void* cfg) {
   
     ew32_uart_cfg_t* config = (ew32_uart_cfg_t*)device->userdata;
     
@@ -72,26 +61,33 @@ uint8_t ew32_hal_uart_setup(ew32_dev_t* device, void* cfg) {
     return 0;
 }
 
-int32_t ew32_hal_uart_write(ew32_dev_t* device, const void* data, const int32_t size) {
+ew32_ssize_t ew32_hal_uart_write(ew32_dev_t* device, const void* data, const ew32_size_t size) {
   
     ew32_uart_cfg_t* _cfg = (ew32_uart_cfg_t*)device->userdata;
 
-    return ew32_api_uart_write(_cfg->port_num, (uint8_t*)data, size);
+    if(_cfg->port_num== 0) return Serial.write( (ew32_ui8_t*)data, size);
+    if(_cfg->port_num== 1) return Serial1.write( (ew32_ui8_t*)data, size);
+    if(_cfg->port_num == 2) return Serial2.write( (ew32_ui8_t*)data, size);
+
+    return -1;
 }
-int32_t ew32_hal_uart_read(ew32_dev_t* device, void* data, const int32_t size) {
+ew32_ssize_t ew32_hal_uart_read(ew32_dev_t* device, void* data, const ew32_size_t size) {
    
     ew32_uart_cfg_t* _cfg = (ew32_uart_cfg_t*)device->userdata;
 
-    int32_t _used = ew32_hal_uart_avaible(_cfg->port_num);
+    ew32_i32_t _used = ew32_hal_uart_avaible(_cfg->port_num);
     _used = _used > size ? size : _used;
 
     if(_used ) {
-        return ew32_api_uart_read(_cfg->port_num, (uint8_t*) data, _used);
+        if(_cfg->port_num == 0) return Serial.readBytes((ew32_ui8_t*) data, size);
+        if(_cfg->port_num == 1) return Serial1.readBytes((ew32_ui8_t*) data, size);
+        if(_cfg->port_num == 2) return Serial2.readBytes((ew32_ui8_t*) data, size);
     }
-    return 0;
+    return -1;
 }
 
-uint32_t ew32_hal_uart_avaible(uint32_t portnum) {
+
+ew32_ui32_t ew32_hal_uart_avaible(ew32_ui8_t portnum) {
 
     if(portnum == 0) return Serial.available();
     if(portnum == 1) return Serial1.available();
@@ -99,5 +95,5 @@ uint32_t ew32_hal_uart_avaible(uint32_t portnum) {
     return -1;
 }
 
-
+}
 #endif

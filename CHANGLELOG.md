@@ -1,4 +1,17 @@
 # Changelog
+# version 0.5.0
+## Add 
+- Add function `ew32_init_framework` initialisiert the framework and aöö subsysteme in osa/hal und the devicemanager
+- Add own types `ew32_{ui8, ui16, ui32, i8, i16, i32 }_t` 
+- Add `EW32_CONFIG_ENABLE_GPIO_ISR` with `EW32_CONFIG_YES`, with  `EW32_CONFIG_NO` rhen gpio isr system not init
+- Add gpio interrupt system, with `ew32_hal_gpio_attache_isr`, when `EW32_CONFIG_ENABLE_GPIO_ISR` == `EW32_CONFIG_NO` in ew32_config.h 
+then is `ew32_hal_gpio_attache_isr` not working and return 1.
+
+## Change 
+- Change all types to new ew32 type system
+
+## Info
+- Version now 0.5.0 and ew32_base 0.5.01 - ew32_devm Major/Minor now same with using ew32_base Major/Minor 
 
 # Version 0.3.0
 ## Changed

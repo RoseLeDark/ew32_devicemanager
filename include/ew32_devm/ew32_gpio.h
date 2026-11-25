@@ -29,7 +29,7 @@ extern "C" {
 #endif
 
 
-uint8_t ew32_hal_gpio_setup();
+ew32_error_t ew32_hal_gpio_setup();
 
 
 #ifdef __cplusplus

@@ -49,35 +49,35 @@ extern "C" {
  * @param msg Message type ID (e.g., EW32_BUSI2C_FOUND_NEWDEVICE).
  * @param addrs Pointer to event-specific data (such as an I2C address).
  * @param size Size of the data payload in bytes.
- * @return uint8_t Status code (EW32_DEVICE_NO_ERROR on success).
+ * @return ew32_ui8_t Status code (EW32_DEVICE_NO_ERROR on success).
  */
-uint8_t EW32_WEAK ew32_i2c_handle(ew32_dev_t* sender, uint8_t msg, void* addrs, uint32_t size);
+ew32_ui8_t EW32_WEAK ew32_i2c_handle(ew32_dev_t* sender, ew32_ui8_t msg, void* addrs, ew32_size_t size);
 
 /**
  * @brief Configuration structure for the I2C bus driver.
  */
 typedef struct es32_i2c_config {
-    uint8_t pin_sda;            /**< GPIO pin number assigned for SDA (Serial Data). */
-    uint8_t pin_scl;            /**< GPIO pin number assigned for SCL (Serial Clock). */
-    uint8_t port_num;           /**< Hardware I2C port controller number. */
-    uint8_t address_set[128];   /**< Bitmap representing discovered 7-bit I2C addresses (0-127). */
-    uint8_t hardware;           /**< Hardware flags or specific revision identifier. */
+    ew32_ui8_t pin_sda;            /**< GPIO pin number assigned for SDA (Serial Data). */
+    ew32_ui8_t pin_scl;            /**< GPIO pin number assigned for SCL (Serial Clock). */
+    ew32_ui8_t port_num;           /**< Hardware I2C port controller number. */
+    ew32_ui8_t address_set[128];   /**< Bitmap representing discovered 7-bit I2C addresses (0-127). */
+    ew32_ui8_t hardware;           /**< Hardware flags or specific revision identifier. */
     void* apihandler;           /**< Underlying platform-specific driver handle (opaque pointer). */
-    uint8_t used;
-    uint8_t powerstate;
+    ew32_ui8_t used;
+    ew32_ui8_t powerstate;
 } ew32_i2c_cfg_t;
 
 /**
  * @brief Unified I/O messaging structure for read and write operations.
  */
 typedef struct ew32_i2c_io {
-    uint8_t addr;               /**< Target 7-bit device address, or 255 if targeting the bus itself. */
-    uint8_t message_id;         /**< Command or message type identifier. */
-    uint32_t timeout;           /**< Operation timeout limit in milliseconds or ticks. */
-    uint8_t *reg_addr;          /**< Target register address pointer (used exclusively for read operations). */
-    size_t reg_size;            /**< Size of the register address in bytes (used exclusively for read operations). */
-    size_t msg_size;            /**< Size of the data message payload buffer. */
-    uint8_t* message;              /**< Pointer to the data payload buffer. */
+    ew32_ui8_t addr;               /**< Target 7-bit device address, or 255 if targeting the bus itself. */
+    ew32_ui8_t message_id;         /**< Command or message type identifier. */
+    ew32_ui32_t timeout;           /**< Operation timeout limit in milliseconds or ticks. */
+    ew32_ui8_t *reg_addr;          /**< Target register address pointer (used exclusively for read operations). */
+    ew32_size_t reg_size;            /**< Size of the register address in bytes (used exclusively for read operations). */
+    ew32_size_t msg_size;            /**< Size of the data message payload buffer. */
+    ew32_ui8_t* message;              /**< Pointer to the data payload buffer. */
 } ew32_i2c_io_t;
 
 /// ========== WRITE STRUCT ==========
@@ -91,10 +91,10 @@ typedef struct ew32_i2c_io {
  * @brief Structure used when registering a new sub-device on the I2C bus.
  */
 typedef struct ew32_i2c_registnewdev {
-    uint8_t new_addr;                   /**< 7-bit I2C address of the new device. */
-    uint32_t scl_speed_hz;              /**< Clock frequency of the SCL line in Hertz. */
-    uint32_t scl_wait_us;               /**< Clock stretch timeout or wait time in microseconds. */
-    uint32_t disable_ack_check:      1;   /**< Bitfield flag to disable ACK checking if set to 1. */
+    ew32_ui8_t new_addr;                   /**< 7-bit I2C address of the new device. */
+    ew32_ui32_t scl_speed_hz;              /**< Clock frequency of the SCL line in Hertz. */
+    ew32_ui32_t scl_wait_us;               /**< Clock stretch timeout or wait time in microseconds. */
+    ew32_ui32_t disable_ack_check:      1;   /**< Bitfield flag to disable ACK checking if set to 1. */
 } ew32_i2c_new_dev_t;
 
 #define EW32_I2C_TRANSMIT_MSG_ID 2      /**< Message ID for raw data transmission. */
@@ -118,14 +118,14 @@ typedef struct ew32_i2c_registnewdev {
  * @param port_num Hardware port index.
  * @param handler Callback function for asynchronous bus events.
  * @param device Double pointer to receive the created base device instance.
- * @return uint8_t EW32_DEVICE_NO_ERROR on success, or an error code on failure.
+ * @return ew32_ui8_t EW32_DEVICE_NO_ERROR on success, or an error code on failure.
  */
 
-uint8_t ew32_device_i2c_setup(uint8_t sda, uint8_t scl, uint8_t port_num);
-uint8_t ew32_device_i2c_isadress(uint8_t port_num, uint8_t address);
+ew32_error_t ew32_device_i2c_setup(ew32_ui8_t sda, ew32_ui8_t scl, ew32_ui8_t port_num);
+ew32_bool_t ew32_device_i2c_isadress(ew32_ui8_t port_num, ew32_ui8_t address);
 
-int32_t ew32_device_i2c_write(uint8_t port_num,  ew32_i2c_io_t* data, int32_t size);
-int32_t ew32_device_i2c_read(uint8_t port_num,  ew32_i2c_io_t* data, int32_t size);
+ew32_ssize_t ew32_device_i2c_write(ew32_ui8_t port_num,  ew32_i2c_io_t* data, ew32_size_t size);
+ew32_ssize_t ew32_device_i2c_read(ew32_ui8_t port_num,  ew32_i2c_io_t* data, ew32_size_t size);
        
 
 

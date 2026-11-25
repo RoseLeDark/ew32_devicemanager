@@ -24,6 +24,7 @@
 #include "ew32_error.h"
 #include "ew32_config.h"
 #include "stdint.h"
+#include <ew32_base/ew32_types.h>
 
 /** @name Device Classes */
 /// @{
@@ -125,29 +126,29 @@ extern "C" {
 typedef struct EW32_PACKED ew32device  {
     char    subpath[16];                                                 /**< Subpath or identifier for the device within the system. */
     ew32_file_t id;                                                     /**< Unique instance identifier or slot index. */
-    uint16_t cls;                                                    /**< Device classification (e.g., system, external, virtual). */
-    uint16_t type;                                                   /**< Device operational type (input, output, inout). */
-    uint8_t  rw;                                               /**< Read write status: 0 => read-only, 1 => write-only, 2 => read-write */
-    uint8_t  state;                                               /**< Current operational state of the device (e.g., suspended, resumed). */
+    ew32_ui16_t cls;                                                    /**< Device classification (e.g., system, external, virtual). */
+    ew32_ui16_t type;                                                   /**< Device operational type (input, output, inout). */
+    ew32_ui8_t  rw;                                               /**< Read write status: 0 => read-only, 1 => write-only, 2 => read-write */
+    ew32_state_t  state;                                               /**< Current operational state of the device (e.g., suspended, resumed). */
     
     struct ew32device* parent;                                      /**< Pointer to the parent device node (e.g., bus controller). */
     
 
-    uint8_t (* probe)(struct ew32device* device, void* cfg);         /**< Function pointer for discovering hardware capabilities. */
-    uint8_t (* setup)(struct ew32device* device, void* cfg);         /**< Function pointer for initializing the device. */
-    int32_t (* write)(struct ew32device* device, const void* data, const int32_t size);   /**< Function pointer for writing data or control messages. */
-    int32_t (* read)(struct ew32device* device, void* data, const int32_t size);    /**< Function pointer for reading data from the device. */
+    ew32_error_t (* probe)(struct ew32device* device, void* cfg);         /**< Function pointer for discovering hardware capabilities. */
+    ew32_error_t (* setup)(struct ew32device* device, void* cfg);         /**< Function pointer for initializing the device. */
+    ew32_ssize_t (* write)(struct ew32device* device, const void* data, const ew32_size_t size);   /**< Function pointer for writing data or control messages. */
+    ew32_ssize_t (* read)(struct ew32device* device, void* data, const ew32_size_t size);    /**< Function pointer for reading data from the device. */
 
-    uint8_t (* get_state)(struct ew32device* device, uint8_t state_id);
-    uint8_t (* set_state)(struct ew32device* device, uint8_t state_id, uint8_t state);
+    ew32_state_t (* get_state)(struct ew32device* device, ew32_ui8_t state_id);
+    ew32_error_t (* set_state)(struct ew32device* device, ew32_ui8_t state_id, ew32_state_t state);
 
     union {
         void (* on_run)(struct ew32device* device);                       /**< Function pointer for handling periodic tasks or events. */
-        void (* on_run_r)(struct ew32device* device, uint64_t millis);  
+        void (* on_run_r)(struct ew32device* device, ew32_ticks_t ticks);  
     };
     union  {
         void*       userdata;                                                 /**< Pointer to private driver-specific configuration or state data. */
-        uint32_t    raw_userdata;                                             /**< Raw representation of the user data pointer for low-level access. */
+        ew32_ui32_t    raw_userdata;                                             /**< Raw representation of the user data pointer for low-level access. */
     };
     
     
@@ -162,7 +163,7 @@ typedef struct EW32_PACKED ew32device  {
  * @param size Size of the payload data in bytes.
  * @return int32_t Number of bytes written, or a negative error code on failure.
  */
-int32_t ew32_device_send(ew32_dev_t* device, const void* data, const int32_t size);
+ew32_ssize_t ew32_device_send(ew32_dev_t* device, const void* data, const ew32_size_t size);
 
 /**
  * @brief Reads data from a device.
@@ -172,102 +173,102 @@ int32_t ew32_device_send(ew32_dev_t* device, const void* data, const int32_t siz
  * @param size Maximum number of bytes to read.
  * @return int32_t Number of bytes read, or a negative error code on failure.
  */
-int32_t ew32_device_read(ew32_dev_t* device, void* data, const int32_t size);
+ew32_ssize_t ew32_device_read(ew32_dev_t* device, void* data, const ew32_size_t size);
 
 /**
  * @brief Sets or queries the power state of a device. Obsolet please use ew32_device_set_state(device, EW32_DEVICE_STATEID_POWERSTATE, state)
  * 
  * @param device Pointer to the target device node.
  * @param state Target power state value.
- * @return uint8_t EW32_DEVICE_NO_ERROR on success, or an error code.
+ * @return ew32_ui8_t EW32_DEVICE_NO_ERROR on success, or an error code.
  */
-uint8_t ew32_device_pstate(ew32_dev_t* device, uint8_t state);
+ew32_error_t ew32_device_pstate(ew32_dev_t* device, ew32_ui8_t state);
 
 /**
  * @brief Executes the probe routine on a device to detect underlying hardware.
  * 
  * @param device Pointer to the target device node.
  * @param cfg Optional configuration pointer passed to the probe function.
- * @return uint8_t EW32_DEVICE_NO_ERROR on success, or an error code.
+ * @return ew32_ui8_t EW32_DEVICE_NO_ERROR on success, or an error code.
  */
-uint8_t ew32_device_probe(ew32_dev_t* device, void* cfg);
+ew32_error_t ew32_device_probe(ew32_dev_t* device, void* cfg);
 
 /**
  * @brief Executes the setup routine to initialize a device for operation.
  * 
  * @param device Pointer to the target device node.
  * @param cfg Optional configuration pointer passed to the setup function.
- * @return uint8_t EW32_DEVICE_NO_ERROR on success, or an error code.
+ * @return ew32_ui8_t EW32_DEVICE_NO_ERROR on success, or an error code.
  */
-uint8_t ew32_device_setup(ew32_dev_t* device, void* cfg);
+ew32_error_t ew32_device_setup(ew32_dev_t* device, void* cfg);
 
 /**
  * @brief Assigns private user data or driver context to a device.
  * 
  * @param device Pointer to the target device node.
  * @param data Pointer to the context structure to attach.
- * @return uint8_t EW32_DEVICE_NO_ERROR on success.
+ * @return ew32_ui8_t EW32_DEVICE_NO_ERROR on success.
  */
-uint8_t ew32_device_set_userdata(ew32_dev_t* device, void* data);
+ew32_error_t ew32_device_set_userdata(ew32_dev_t* device, void* data);
 
 /**
  * @brief Retrieves the private user data or driver context from a device.
  * 
  * @param device Pointer to the target device node.
  * @param data Double pointer to receive the stored context pointer.
- * @return uint8_t EW32_DEVICE_NO_ERROR on success, or an error code if null.
+ * @return ew32_ui8_t EW32_DEVICE_NO_ERROR on success, or an error code if null.
  */
-uint8_t ew32_device_get_userdata(ew32_dev_t* device, void** data);
+ew32_error_t ew32_device_get_userdata(ew32_dev_t* device, void** data);
 
 /**
  * @brief Checks whether a device is currently capable of sending/writing data.
  * 
  * @param device Pointer to the target device node.
- * @return uint8_t EW32_DEVICE_YES if capable, otherwise EW32_DEVICE_NO.
+ * @return ew32_ui8_t EW32_DEVICE_YES if capable, otherwise EW32_DEVICE_NO.
  */
-uint8_t ew32_device_can_send(ew32_dev_t* device);
+ew32_error_t ew32_device_can_send(ew32_dev_t* device);
 
 /**
  * @brief Checks whether a device is currently capable of receiving/reading data.
  * 
  * @param device Pointer to the target device node.
- * @return uint8_t EW32_DEVICE_YES if capable, otherwise EW32_DEVICE_NO.
+ * @return ew32_ui8_t EW32_DEVICE_YES if capable, otherwise EW32_DEVICE_NO.
  */
-uint8_t ew32_device_can_read(ew32_dev_t* device);
+ew32_error_t ew32_device_can_read(ew32_dev_t* device);
 
 /**
  * @brief Gets the parent device node associated with this device.
  * 
  * @param device Pointer to the target device node.
  * @param parent Double pointer to receive the parent device reference.
- * @return uint8_t EW32_DEVICE_NO_ERROR on success, or an error code.
+ * @return ew32_ui8_t EW32_DEVICE_NO_ERROR on success, or an error code.
  */
-uint8_t ew32_device_get_parent(ew32_dev_t* device, ew32_dev_t** parent);
+ew32_error_t ew32_device_get_parent(ew32_dev_t* device, ew32_dev_t** parent);
 
 /**
  * @brief Sets or updates the parent device node for this device.
  * 
  * @param device Pointer to the target device node.
  * @param parent Pointer to the new parent device node.
- * @return uint8_t EW32_DEVICE_NO_ERROR on success.
+ * @return ew32_ui8_t EW32_DEVICE_NO_ERROR on success.
  */
-uint8_t ew32_device_set_parent(ew32_dev_t* device, ew32_dev_t* parent);
+ew32_error_t ew32_device_set_parent(ew32_dev_t* device, ew32_dev_t* parent);
 
 /**
  * @brief Retrieves the current operational state of a device (e.g., suspended, resumed).
  * 
  * @param device Pointer to the target device node.
- * @return uint8_t The current operational state.
+ * @return ew32_ui8_t The current operational state.
  */
-int8_t ew32_device_get_state(ew32_dev_t* device, uint8_t state_id);
+ew32_state_t ew32_device_get_state(ew32_dev_t* device, ew32_ui8_t state_id);
 /**
  * @brief Sets the operational state of a device (e.g., suspend, resume).
  * 
  * @param device Pointer to the target device node.
  * @param state The desired operational state.
- * @return uint8_t EW32_DEVICE_NO_ERROR on success.
+ * @return ew32_i8_t EW32_DEVICE_NO_ERROR on success.
  */
-int8_t ew32_device_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state);
+ew32_error_t ew32_device_set_state(ew32_dev_t* device, ew32_ui8_t state_id, ew32_state_t state);
 
 #ifdef __cplusplus
 }

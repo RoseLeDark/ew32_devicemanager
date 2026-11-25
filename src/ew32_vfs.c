@@ -19,7 +19,6 @@
  */
 
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -36,13 +35,13 @@
 struct ew32_vfs_db_regist {
     ew32_dev_t      *device;
     char            path[64];
-    uint8_t         state;              // 0 = free, 1 = regist, 
+    ew32_ui8_t         state;              // 0 = free, 1 = regist, 
 };
 
 static struct ew32_vfs_db_regist   __vfs_file_db[EW32_DEVICE_MANAGER_DEVICES];
 
 
-int32_t __ew32_vfsdb_getidByPath(const char * path, uint8_t* canRead, uint8_t *canWrite) {
+ew32_i32_t __ew32_vfsdb_getidByPath(const char * path, ew32_ui8_t* canRead, ew32_ui8_t *canWrite) {
     ew32_file_t _ret = -1;
 
     for(ew32_file_t i = 0; i < EW32_DEVICE_MANAGER_DEVICES ; i++) {
@@ -57,7 +56,7 @@ int32_t __ew32_vfsdb_getidByPath(const char * path, uint8_t* canRead, uint8_t *c
     }
     return _ret;
 }
-int8_t ew32_vfsdb_getbyid(int32_t id, ew32_dev_t** device) {
+ew32_i8_t ew32_vfsdb_getbyid(ew32_i32_t id, ew32_dev_t** device) {
     if(__vfs_file_db[id].state == 0) return ENODEV;
 
     if(device == NULL) return EIO;
@@ -65,10 +64,10 @@ int8_t ew32_vfsdb_getbyid(int32_t id, ew32_dev_t** device) {
 
     return 0;
 }
-int32_t ew32_vfsdb_regist_device(const char* path, ew32_dev_t* device, uint8_t state) {
-    int32_t _ret = -1;
+ew32_error_t ew32_vfsdb_regist_device(const char* path, ew32_dev_t* device, ew32_ui8_t state) {
+    ew32_error_t _ret = -1;
     
-    for(int32_t i = 0; i < EW32_DEVICE_MANAGER_DEVICES; i++) {
+    for(ew32_i32_t i = 0; i < EW32_DEVICE_MANAGER_DEVICES; i++) {
         if(__vfs_file_db[i].state == 1) continue;
 
         _ret = i;
@@ -78,7 +77,7 @@ int32_t ew32_vfsdb_regist_device(const char* path, ew32_dev_t* device, uint8_t s
 
         const char* _p = (state == 1) ? EW32_VFS_DEV_PATH : EW32_VFS_SYS_PATH;     
 
-        sniprintf(__vfs_file_db[i].path, sizeof(__vfs_file_db[i].path), "%s%c%s", _p, EW32_VFS_DELIMETER, path);
+        snprintf(__vfs_file_db[i].path, sizeof(__vfs_file_db[i].path), "%s%c%s", _p, EW32_VFS_DELIMETER, path);
 
         break;
 
@@ -90,19 +89,19 @@ int32_t ew32_vfsdb_regist_device(const char* path, ew32_dev_t* device, uint8_t s
 /// ============= DB_ENDE =============
 
 struct ew32_file_fd {
-    uint8_t         state;                  // 0 => unjused
-    int16_t         open_count;             // Wie oft offen, jeder zugriff ++, bei close -- == 0 dann richtig close
-    int32_t         dev_index;
+    ew32_ui8_t         state;                  // 0 => unjused
+    ew32_i32_t         open_count;             // Wie oft offen, jeder zugriff ++, bei close -- == 0 dann richtig close
+    ew32_i32_t         dev_index;
     
     union  {
         struct  {
-            uint8_t    read : 1;
-            uint8_t    write : 1;
-            uint8_t    is_exclusive : 1;
-            uint8_t    reserv;
-            uint8_t    id : 4;
+            ew32_ui8_t    read : 1;
+            ew32_ui8_t    write : 1;
+            ew32_ui8_t    is_exclusive : 1;
+            ew32_ui8_t    reserv;
+            ew32_ui8_t    id : 4;
         };
-        uint8_t        f;
+        ew32_ui8_t        f;
     };
     ew32_semaphore_t lock;
 };
@@ -110,8 +109,9 @@ struct ew32_file_fd {
 static struct ew32_file_fd          __fd_table[EW32_MAX_OPEN_FILES];
 static ew32_semaphore_t             __ew32_excl_lock;
 static ew32_semaphore_t             __ew32_create_lock; 
-uint8_t ew32_vfs_init()  {
-    static uint8_t _created = 0;
+
+ew32_error_t ew32_vfs_init()  {
+    static ew32_ui8_t _created = 0;
     if(_created == 1) return 0;
     _created = 1;
 
@@ -120,8 +120,8 @@ uint8_t ew32_vfs_init()  {
 
     return 0;
 }
-uint8_t __ew32_vfs_cheakother_exclusiv(ew32_file_t me) {
-    uint8_t _ret = 0;
+ew32_error_t __ew32_vfs_cheakother_exclusiv(ew32_file_t me) {
+    ew32_error_t _ret = 0;
 
     ew32_osa_smph_lock(__ew32_excl_lock, EW32_INFINITY);
 
@@ -152,7 +152,7 @@ ew32_file_t _ew32_vfs_get_entry() {
     return _ret;
 }
 
-ew32_dev_t* __ew32_vfs_cheak_device(ew32_file_t _fd, uint8_t* _ret) {
+ew32_dev_t* __ew32_vfs_cheak_device(ew32_file_t _fd, ew32_error_t* _ret) {
 
     ew32_dev_t* _dev = 0;
 
@@ -164,7 +164,7 @@ ew32_dev_t* __ew32_vfs_cheak_device(ew32_file_t _fd, uint8_t* _ret) {
         if(__fd_table[_fd].open_count == 0 || __fd_table[_fd].state != 1) 
             { *_ret = -EPROTO; break; }
 
-        uint8_t _reet = ew32_vfsdb_getbyid(__fd_table[_fd].dev_index, &_dev);
+        ew32_error_t _reet = ew32_vfsdb_getbyid(__fd_table[_fd].dev_index, &_dev);
         if(_reet != 0 || _dev == 0) { *_ret = -ENODEV; break; }
 
         
@@ -176,21 +176,21 @@ ew32_dev_t* __ew32_vfs_cheak_device(ew32_file_t _fd, uint8_t* _ret) {
     return _dev;
 }
 
-uint8_t ew32_vfs_fopen(ew32_file_t* ctx, const char * path, int flags, int mode) {
+ew32_error_t ew32_vfs_fopen(ew32_file_t* ctx, const char * path, ew32_ui32_t flags, ew32_ui32_t mode) {
     if(ctx == 0) return EIO;
 
     ew32_file_t _newfd = -1;
-    uint8_t canRead = 0;
-    uint8_t canWrite = 0;
-    uint8_t _ret = 1;
+    ew32_ui8_t canRead = 0;
+    ew32_ui8_t canWrite = 0;
+    ew32_ui8_t _ret = 1;
 
-    int access_mode = flags & O_ACCMODE;
+    ew32_i32_t access_mode = flags & O_ACCMODE;
     
     ew32_osa_smph_lock(__ew32_create_lock, EW32_INFINITY);
     
     while (1)
     {   
-        int32_t _db_entry = __ew32_vfsdb_getidByPath(path, &canRead, &canWrite);
+        ew32_i32_t _db_entry = __ew32_vfsdb_getidByPath(path, &canRead, &canWrite);
         if (_db_entry == -1) { _ret = ENXIO; break; }  // not a device
 
 
@@ -229,10 +229,10 @@ uint8_t ew32_vfs_fopen(ew32_file_t* ctx, const char * path, int flags, int mode)
 
 
 
-int32_t ew32_vfs_fread (ew32_file_t* ctx, void * dst, uint32_t size) {
+ew32_ssize_t ew32_vfs_fread (ew32_file_t* ctx, void * dst, ew32_size_t size) {
     if(ctx == 0) return -EIO;
 
-    uint8_t _ret = 0;
+    ew32_ui8_t _ret = 0;
     ew32_file_t _fd = *ctx;
     ew32_dev_t* _dev = 0;
 
@@ -246,10 +246,10 @@ int32_t ew32_vfs_fread (ew32_file_t* ctx, void * dst, uint32_t size) {
     
 }
 
-int32_t ew32_vfs_fwrite (ew32_file_t* ctx, void * dst, uint32_t size) {
+ew32_ssize_t ew32_vfs_fwrite (ew32_file_t* ctx, void * dst, ew32_size_t size) {
     if(ctx == 0) return -EIO;
 
-    uint8_t _ret = 0;
+    ew32_ui8_t _ret = 0;
     ew32_file_t _fd = *ctx;
     ew32_dev_t* _dev = 0;
 
@@ -259,12 +259,12 @@ int32_t ew32_vfs_fwrite (ew32_file_t* ctx, void * dst, uint32_t size) {
 
     return _ret;
 }
-long ew32_vfs_fseek(ew32_file_t* ctx, long size, int mode) {
+ew32_i64_t ew32_vfs_fseek(ew32_file_t* , ew32_size_t , ew32_ui32_t ) {
     return -ENOSYS;
 }
-uint8_t ew32_vfs_fclose(ew32_file_t* ctx) {
+ew32_error_t ew32_vfs_fclose(ew32_file_t* ctx) {
     if(ctx == 0) return -EIO;
-    uint8_t _ret = 1;
+    ew32_ui8_t _ret = 1;
 
     ew32_file_t _fd = *ctx;
 

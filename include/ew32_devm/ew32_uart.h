@@ -39,9 +39,12 @@ extern "C" {
  * @param device Double pointer to receive the created virtual device instance.
  * @return uint8_t EW32_DEVICE_NO_ERROR on success, or an error code on failure.
  */
-uint8_t ew32_device_uart_setup_ex(uint8_t port_num, unsigned long baud, uint32_t config, int8_t rx, int8_t tx);
+ew32_error_t ew32_device_uart_setup_ex(ew32_ui8_t port_num, ew32_ui64_t baud, ew32_ui32_t config, ew32_i8_t rx, ew32_i8_t tx);
 
-int32_t ew32_device_uart_send(uint8_t port_num, const char* buf, uint32_t size);
+
+ew32_ssize_t ew32_device_uart_send(ew32_ui8_t port_num, const char* buf, const ew32_size_t size);
+ew32_ssize_t ew32_device_uart_read(ew32_ui8_t port_num, char* buf, const ew32_size_t size);
+ew32_i8_t ew32_device_uart_get(ew32_ui8_t port_num);
 
 #define ew32_device_uart_setup(port_num, baud, config) ew32_device_uart_setup_ex(port_num, baud, config, -1, -1)
 

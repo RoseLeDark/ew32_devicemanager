@@ -53,7 +53,7 @@ int8_t ew32_vfsdb_getbyid(int32_t id, ew32_dev_t** device);
  * @param state The initial state of the device (e.g., enabled or disabled).
  * @return int8_t Returns the unique identifier assigned to the registered device, or a negative error code on failure.
  */
-int32_t ew32_vfsdb_regist_device(const char* path, ew32_dev_t* device, uint8_t state);
+ew32_error_t ew32_vfsdb_regist_device(const char* path, ew32_dev_t* device, ew32_bool_t state);
 
 // Public api for VFS
 
@@ -64,9 +64,9 @@ int32_t ew32_vfsdb_regist_device(const char* path, ew32_dev_t* device, uint8_t s
  * allowing devices to be registered, opened, read from, written to, and closed
  * using standard file-like operations.
  * 
- * @return uint8_t Returns 0 on success, or a non-zero error code on failure.
+ * @return ew32_error_t Returns 0 on success, or a non-zero error code on failure.
  */
-uint8_t ew32_vfs_init();
+ew32_error_t ew32_vfs_init();
 
 /**
  * @brief Opens a device file in the virtual file system.
@@ -78,9 +78,9 @@ uint8_t ew32_vfs_init();
  * @param path The path to the device file.
  * @param flags The flags for opening the file.
  * @param mode The mode for opening the file.
- * @return uint8_t Returns 0 on success, or a non-zero error code on failure.
+ * @return ew32_error_t Returns 0 on success, or a non-zero error code on failure.
  */
-uint8_t ew32_vfs_fopen(ew32_file_t* ctx, const char * path, int flags, int mode) ;
+ew32_error_t ew32_vfs_fopen(ew32_file_t* ctx, const char * path, ew32_ui32_t flags, ew32_ui32_t mode) ;
 
 /**
  * @brief Reads data from a device file in the virtual file system.
@@ -90,7 +90,7 @@ uint8_t ew32_vfs_fopen(ew32_file_t* ctx, const char * path, int flags, int mode)
  * @param size The number of bytes to read.
  * @return ssize_t The number of bytes read, or a negative error code on failure.
  */
-int32_t ew32_vfs_fread (ew32_file_t* ctx, void * buffer, uint32_t size);
+ew32_ssize_t ew32_vfs_fread (ew32_file_t* ctx, void * buffer, ew32_size_t size);
 
 /**
  * @brief Writes data to a device file in the virtual file system.
@@ -100,7 +100,7 @@ int32_t ew32_vfs_fread (ew32_file_t* ctx, void * buffer, uint32_t size);
  * @param size The number of bytes to write.
  * @return ssize_t The number of bytes written, or a negative error code on failure.
  */
-int32_t ew32_vfs_fwrite (ew32_file_t* ctx, void * buffer, uint32_t size);
+ew32_ssize_t ew32_vfs_fwrite (ew32_file_t* ctx, void * buffer, ew32_size_t size);
 /**
  * @brief Seeks within a device file in the virtual file system.
  * 
@@ -109,14 +109,14 @@ int32_t ew32_vfs_fwrite (ew32_file_t* ctx, void * buffer, uint32_t size);
  * @param mode The mode for seeking.
  * @return off_t The new file position, or a negative error code on failure.
  */
-long ew32_vfs_fseek(ew32_file_t* ctx, long size, int mode);
+ew32_i64_t ew32_vfs_fseek(ew32_file_t* ctx, ew32_size_t size, ew32_ui32_t mode);
 /**
  * @brief Closes a device file in the virtual file system.
  * 
  * @param ctx The file context structure.
  * @return uint8_t Returns 0 on success, or a non-zero error code on failure.
  */
-uint8_t ew32_vfs_fclose(ew32_file_t* ctx);
+ew32_error_t ew32_vfs_fclose(ew32_file_t* ctx);
 
 
 

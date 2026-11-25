@@ -38,6 +38,10 @@
     #define EW32_DEVICE_I2C_MAX_DEVICES         2
 #endif
 
+#ifndef EW32_CONFIG_ENABLE_GPIO_ISR 
+#define EW32_CONFIG_ENABLE_GPIO_ISR             EW32_CONFIG_YES
+#endif
+
 /** @brief Enable or disable I2C bus subsystem support. */
 #ifndef EW32_DEVICE_USE_I2C   
     #define EW32_DEVICE_USE_I2C                 EW32_CONFIG_YES
@@ -144,9 +148,7 @@
     #endif
 #endif
 
-#ifndef EW32_MAX_OPEN_FILES
-#define EW32_MAX_OPEN_FILES                     16
-#endif
+
 
 #ifndef EW32_VFS_DEV_PATH       
 #define EW32_VFS_DEV_PATH                       "/dev"
@@ -161,21 +163,7 @@
 #endif
 
 
-#if EW32_MAX_OPEN_FILES >= __INT16_MAX__
-    typedef int32_t ew32_file_t;
-    typedef int32_t ew32_devid_t;
-#elif EW32_MAX_OPEN_FILES >= __INT8_MAX__     
-    typedef int16_t ew32_file_t;
-    typedef int16_t ew32_devid_t;
-#else
-   typedef int8_t ew32_file_t;
-   typedef int8_t ew32_devid_t;
-#endif
 
-#define EW32_DEVM_VERSION_MAYOR     0
-#define EW32_DEVM_VERSION_MINOR     3
-#define EW32_DEVM_VERSION_SUB       0
 
-#define EW32_DEVM_VERSION_STRING    "0.3.0"
-#define EW32_DEVM_VERSION           0x000300
+
 

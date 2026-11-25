@@ -28,32 +28,32 @@
 #include <string.h>
 #include "ew32_devm/ew32_devm.h"
 
-uint8_t ew32_nulldev_probe(ew32_dev_t* device, void* cfg) {
+ew32_error_t ew32_nulldev_probe(ew32_dev_t* device, void* cfg) {
     xewLoggingDebug("/dev/null", "ew32_nulldev_probe\n");
 
     return 0;
 }
-uint8_t ew32_nulldev_setup(ew32_dev_t* device, void* cfg) {
+ew32_error_t ew32_nulldev_setup(ew32_dev_t* device, void* cfg) {
     xewLoggingDebug("/dev/null", "ew32_nulldev_setup\n");
     return 0;
 }
-uint8_t ew32_nulldev_get_state(ew32_dev_t* device, uint8_t state) {
-    if (state == EW32_DEVICE_STATEID_POWERSTATE)  return 5;
+ew32_state_t ew32_nulldev_get_state(struct ew32device* device, ew32_ui8_t state_id) {
+    if (state_id == EW32_DEVICE_STATEID_POWERSTATE)  return 5;
 
     xewLoggingDebug("/dev/null", "ew32_nulldev_get_state\n");
     return 0;
 }
 
-uint8_t ew32_nulldev_set_state(ew32_dev_t* device, uint8_t stateid, uint8_t state) {
+ew32_error_t ew32_nulldev_set_state(ew32_dev_t* device, ew32_ui8_t stateid, ew32_state_t state) {
     xewLoggingDebug("/dev/null", "ew32_nulldev_set_state\n");
     return 0;
 }
-int32_t ew32_nulldev_write(ew32_dev_t* device, const  void*, const  int32_t) {
+ew32_ssize_t ew32_nulldev_write(ew32_dev_t* device, const  void*, const  ew32_size_t) {
     xewLoggingDebug("/dev/null", "ew32_nulldev_write\n");
   
     return 0;
 }
-int32_t ew32_nulldev_read(ew32_dev_t* device, void* data, const int32_t size) {
+ew32_ssize_t ew32_nulldev_read(ew32_dev_t* device, void* data, const ew32_size_t size) {
     xewLoggingDebug("/dev/null", "ew32_nulldev_read\n");
     memset(data, 0, size);
     return 0;
@@ -61,7 +61,7 @@ int32_t ew32_nulldev_read(ew32_dev_t* device, void* data, const int32_t size) {
 
 ew32_dev_t __global_device;
 
-uint8_t ew32_device_virtualnull_setup(ew32_dev_t* parent, ew32_dev_t** device) {
+ew32_error_t ew32_device_virtualnull_setup(ew32_dev_t* parent, ew32_dev_t** device) {
     // Instanz initialisieren
     __global_device.subpath[0] = 'n';
     __global_device.subpath[1] = 'u';

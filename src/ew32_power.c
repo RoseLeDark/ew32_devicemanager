@@ -34,8 +34,8 @@
 
 
 typedef struct ew32_powermanager_cfg {
-    uint8_t _current;
-    uint8_t _soll;
+    ew32_ui8_t _current;
+    ew32_ui8_t _soll;
 
     ew32_powermanager_handle test;
     ew32_powermanager_prechange prechange;
@@ -43,18 +43,18 @@ typedef struct ew32_powermanager_cfg {
 
 ew32_dev_t DEVICE;
 
-uint8_t ew32_powermanager_probe(ew32_dev_t* device, void* cfg) {
+ew32_error_t ew32_powermanager_probe(ew32_dev_t* device, void* cfg) {
     return 0;
 }
 
-uint8_t ew32_powermanager_setup(ew32_dev_t* device, void* cfg) {
+ew32_error_t ew32_powermanager_setup(ew32_dev_t* device, void* cfg) {
     if (device == NULL || device->userdata == NULL) return EW32_DEVICE_ERROR_NULL;
 
 
     return 0;
 }
 
-uint8_t ew32_powermanager_get_state(ew32_dev_t* device, uint8_t stateid) {
+ew32_state_t ew32_powermanager_get_state(ew32_dev_t* device, ew32_ui8_t stateid) {
     if (device == NULL) return 0;
     ew32_power_cfg_t* _pstate = (ew32_power_cfg_t*)device->userdata;
 
@@ -65,7 +65,7 @@ uint8_t ew32_powermanager_get_state(ew32_dev_t* device, uint8_t stateid) {
 }
 
 
-uint8_t ew32_powermanager_set_state(ew32_dev_t* device, uint8_t state_id, uint8_t state) {
+ew32_error_t ew32_powermanager_set_state(ew32_dev_t* device, ew32_ui8_t state_id, ew32_state_t state) {
     if (device == NULL) return EW32_DEVICE_ERROR_NULL;
 
     if (state_id == EW32_DEVICE_STATEID_MODE) {
@@ -76,7 +76,7 @@ uint8_t ew32_powermanager_set_state(ew32_dev_t* device, uint8_t state_id, uint8_
     return 0;
 }
 
-int32_t ew32_powermanager_write(ew32_dev_t* device,const  void* data,const  int32_t size) {
+ew32_ssize_t ew32_powermanager_write(ew32_dev_t* device,const  void* data,const  ew32_size_t size) {
     if (device == NULL || device->userdata == NULL) return -1;
     ew32_power_cfg_t* _pstate = (ew32_power_cfg_t*)device->userdata;
 
@@ -92,7 +92,7 @@ int32_t ew32_powermanager_write(ew32_dev_t* device,const  void* data,const  int3
 }
 
 
-int32_t ew32_powermanager_read(ew32_dev_t* device, void* data, const int32_t size) {
+ew32_ssize_t ew32_powermanager_read(ew32_dev_t* device, void* data, const ew32_size_t size) {
     if (device == NULL || device->userdata == NULL) return -1;
     ew32_power_cfg_t* _pstate = (ew32_power_cfg_t*)device->userdata;
 
@@ -108,7 +108,7 @@ int32_t ew32_powermanager_read(ew32_dev_t* device, void* data, const int32_t siz
 }
 
 
-void ew32_powermanager_onrun(struct ew32device* device, uint64_t ticks) {
+void ew32_powermanager_onrun(struct ew32device* device, ew32_ticks_t ticks) {
     if (device == NULL) return;
 
     if (device->state == EW32_DEVICE_STATE_SUSPEND) {
@@ -152,7 +152,7 @@ void ew32_device_powermanager_sethandle(ew32_powermanager_handle test, ew32_powe
     _pstate->prechange = prechange;
 }
 
-uint8_t ew32_device_powermanager_setup(ew32_dev_t** device){
+ew32_error_t ew32_device_powermanager_setup(ew32_dev_t** device){
 
     static ew32_power_cfg_t _cfg;
     memset(&_cfg, 0, sizeof(ew32_power_cfg_t));
