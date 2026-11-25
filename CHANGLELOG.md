@@ -9,7 +9,9 @@ then is `ew32_hal_gpio_attache_isr` not working and return 1.
 
 ## Change 
 - Change all types to new ew32 type system
-
+- rename `ew32_devm.h` to `ew32_devicemanager.h` - the device manager
+- rename `devicemanager.h` to `ew32_devm.h` for base include file
+- update example/example.c
 ## Info
 - Version now 0.5.0 and ew32_base 0.5.01 - ew32_devm Major/Minor now same with using ew32_base Major/Minor 
 
